@@ -5,9 +5,13 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
+  ChevronRight,
   Download,
   FileCode2,
   FilePlus2,
+  Folder,
+  FolderPlus,
   Loader2,
   Lock,
   RefreshCw,
@@ -25,6 +29,44 @@ import { Alert, Button, Input } from "@/components/ui";
 import { cn, fileExtension, formatBytes } from "@/lib/utils";
 
 type TreeEntry = { path: string; size: number; sha: string };
+type TreeRow = { path: string; name: string; depth: number; folder: boolean; size?: number; sha?: string };
+
+function buildTreeRows(entries: TreeEntry[], expanded: Set<string>, term: string): TreeRow[] {
+  type Node = { path: string; folders: Map<string, Node>; files: TreeEntry[] };
+  const root: Node = { path: "", folders: new Map(), files: [] };
+  for (const entry of entries) {
+    const parts = entry.path.split("/");
+    let node = root;
+    for (const part of parts.slice(0, -1)) {
+      const path = node.path ? `${node.path}/${part}` : part;
+      if (!node.folders.has(part)) node.folders.set(part, { path, folders: new Map(), files: [] });
+      node = node.folders.get(part)!;
+    }
+    node.files.push(entry);
+  }
+  const normalizedTerm = term.trim().toLowerCase();
+  const matching = (node: Node): boolean =>
+    !normalizedTerm || [...node.files].some((file) => file.path.toLowerCase().includes(normalizedTerm)) ||
+    [...node.folders.values()].some(matching);
+  const rows: TreeRow[] = [];
+  const visit = (node: Node, depth: number) => {
+    const folders = [...node.folders.values()].sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true }));
+    for (const folder of folders) {
+      if (!matching(folder)) continue;
+      rows.push({ path: folder.path, name: folder.path.split("/").pop()!, depth, folder: true });
+      if (!normalizedTerm && !expanded.has(folder.path)) continue;
+      visit(folder, depth + 1);
+    }
+    const files = node.files
+      .filter((file) => !normalizedTerm || file.path.toLowerCase().includes(normalizedTerm))
+      .sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true }));
+    for (const file of files) {
+      rows.push({ path: file.path, name: file.path.split("/").pop()!, depth, folder: false, size: file.size, sha: file.sha });
+    }
+  };
+  visit(root, 0);
+  return rows;
+}
 
 type TreePayload = {
   repo: {
@@ -77,6 +119,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   const [treeLoading, setTreeLoading] = useState(false);
   const [branch, setBranch] = useState("");
   const [filter, setFilter] = useState("");
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const [selected, setSelected] = useState<string | null>(null);
   const [file, setFile] = useState<FilePayload | null>(null);
@@ -88,6 +131,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   const [notice, setNotice] = useState("");
 
   const [showNew, setShowNew] = useState(false);
+  const [newKind, setNewKind] = useState<"file" | "folder">("file");
   const [newPath, setNewPath] = useState("");
   const [uploadContent, setUploadContent] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -111,6 +155,10 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
         if (ref) params.set("ref", ref);
         const data = await apiFetch<TreePayload>(`/api/github/tree?${params.toString()}`);
         setTreeData(data);
+        setExpandedFolders((previous) => {
+          if (previous.size) return previous;
+          return new Set(data.tree.map((entry) => entry.path.split("/")[0]).filter((part) => data.tree.some((entry) => entry.path.startsWith(`${part}/`))));
+        });
         setBranch(ref || data.repo.defaultBranch);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Impossibile leggere il repository.");
@@ -187,8 +235,9 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   }
 
   async function createFile() {
-    const path = newPath.trim().replace(/^\/+/, "");
-    if (!path || !currentId) return;
+    const enteredPath = newPath.trim().replace(/^\/+/, "").replace(/\/+$/, "");
+    if (!enteredPath || !currentId) return;
+    const path = newKind === "folder" ? `${enteredPath}/.gitkeep` : enteredPath;
     setCreating(true);
     setError("");
     try {
@@ -199,17 +248,25 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           owner,
           repo,
           path,
-          content: uploadContent ?? "",
-          message: `Aggiungi ${path}`,
+          content: newKind === "folder" ? "" : (uploadContent ?? ""),
+          message: newKind === "folder" ? `Crea cartella ${enteredPath}` : `Aggiungi ${path}`,
           branch,
         }),
       });
       setShowNew(false);
       setNewPath("");
       setUploadContent(null);
+      setNewKind("file");
       await loadTree(branch);
-      await openFile(path);
-      setNotice("File creato.");
+      if (newKind === "file") await openFile(path);
+      else {
+        setExpandedFolders((previous) => new Set([
+          ...previous,
+          ...enteredPath.split("/").map((_, index, parts) => parts.slice(0, index + 1).join("/")),
+        ]));
+        setNotice(`Cartella ${enteredPath} creata.`);
+      }
+      if (newKind === "file") setNotice("File creato.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Creazione fallita.");
     } finally {
@@ -351,6 +408,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
     reader.onload = () => {
       setUploadContent(String(reader.result ?? ""));
       setNewPath(picked.name);
+      setNewKind("file");
       setShowNew(true);
       setNotice(`Pronto per il caricamento: ${picked.name}`);
     };
@@ -358,14 +416,10 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
     event.target.value = "";
   }
 
-  const filteredTree = useMemo(() => {
-    const entries = treeData?.tree ?? [];
-    const term = filter.trim().toLowerCase();
-    const result = term
-      ? entries.filter((entry) => entry.path.toLowerCase().includes(term))
-      : entries;
-    return result.slice(0, 500);
-  }, [filter, treeData]);
+  const filteredTree = useMemo(
+    () => buildTreeRows(treeData?.tree ?? [], expandedFolders, filter).slice(0, 800),
+    [filter, treeData, expandedFolders],
+  );
 
   const dirty = Boolean(file && draft !== file.content);
 
@@ -403,7 +457,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
             className="input-base h-9 w-auto !py-0 !text-[12.5px]"
           >
             {(treeData?.branches ?? [branch]).map((name) => (
-              <option key={name} value={name} className="bg-ink-900">
+              <option key={name} value={name} className="bg-ink-900 text-zinc-200">
                 {name}
               </option>
             ))}
@@ -419,11 +473,16 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
             size="sm"
             onClick={() => {
               setShowNew((value) => !value);
+              setNewKind("file");
               setUploadContent(null);
             }}
           >
             <FilePlus2 className="h-3.5 w-3.5" />
             Nuovo
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => { setShowNew(true); setNewKind("folder"); setUploadContent(null); }}>
+            <FolderPlus className="h-3.5 w-3.5" />
+            Cartella
           </Button>
           <input
             ref={fileInputRef}
@@ -446,17 +505,18 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           className="glass flex flex-wrap items-end gap-2 p-3"
         >
           <div className="min-w-[220px] flex-1">
-            <span className="label-base">Percorso del nuovo file</span>
+            <span className="label-base">{newKind === "folder" ? "Percorso della nuova cartella" : "Percorso del nuovo file"}</span>
             <Input
               value={newPath}
               onChange={(event) => setNewPath(event.target.value)}
-              placeholder="src/nuovo-file.ts"
+              placeholder={newKind === "folder" ? "src/components" : "src/nuovo-file.ts"}
               autoFocus
             />
+            {newKind === "folder" ? <p className="mt-1 text-[11px] text-zinc-500">GitHub salva le cartelle tramite i file contenuti: verrà aggiunto un file vuoto .gitkeep.</p> : null}
           </div>
           <Button type="submit" loading={creating} disabled={!newPath.trim()}>
             <Check className="h-4 w-4" />
-            {uploadContent !== null ? "Carica file" : "Crea"}
+            {newKind === "folder" ? "Crea cartella" : uploadContent !== null ? "Carica file" : "Crea file"}
           </Button>
           <Button
             type="button"
@@ -465,6 +525,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
               setShowNew(false);
               setNewPath("");
               setUploadContent(null);
+              setNewKind("file");
             }}
           >
             <X className="h-4 w-4" />
@@ -485,7 +546,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
               />
             </div>
             <p className="mt-2 px-1 text-[10.5px] text-zinc-600">
-              {treeData ? `${filteredTree.length} di ${treeData.tree.length} file` : "—"}
+              {treeData ? `${filteredTree.length} elementi · ${treeData.tree.length} file` : "—"}
               {treeData?.truncated ? " · lista troncata" : ""}
             </p>
           </div>
@@ -496,20 +557,37 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
             ) : null}
-            {filteredTree.map((entry) => (
+            {filteredTree.map((entry) => entry.folder ? (
               <button
-                key={entry.path}
+                key={`dir:${entry.path}`}
+                onClick={() => setExpandedFolders((previous) => {
+                  const next = new Set(previous);
+                  if (next.has(entry.path)) next.delete(entry.path); else next.add(entry.path);
+                  return next;
+                })}
+                className="flex w-full items-center gap-2 rounded-lg py-1.5 pr-2 text-left text-[12.5px] text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
+                style={{ paddingLeft: `${10 + entry.depth * 14}px` }}
+                title={entry.path}
+              >
+                {expandedFolders.has(entry.path) || filter.trim() ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-500" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-500" />}
+                <Folder className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                <span className="truncate">{entry.name}</span>
+              </button>
+            ) : (
+              <button
+                key={`file:${entry.path}`}
                 onClick={() => void openFile(entry.path)}
                 className={cn(
-                  "group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition",
+                  "group flex w-full items-center gap-2 rounded-lg py-1.5 pr-2 text-left text-[12.5px] transition",
                   selected === entry.path
                     ? "bg-violet-500/15 text-violet-100"
                     : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200",
                 )}
+                style={{ paddingLeft: `${27 + entry.depth * 14}px` }}
                 title={entry.path}
               >
                 <FileCode2 className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                <span className="truncate">{entry.path}</span>
+                <span className="truncate">{entry.name}</span>
               </button>
             ))}
             {!treeLoading && treeData && filteredTree.length === 0 ? (
@@ -585,7 +663,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                     Seleziona un file per aprirlo nell&apos;editor.
                   </p>
                   <p className="text-xs text-zinc-600">
-                    Puoi creare nuovi file o caricarne uno dal tuo computer.
+                    Puoi creare cartelle, aggiungere file o caricarne uno dal computer.
                   </p>
                 </>
               )}

@@ -31,7 +31,7 @@ export default async function LandingPage() {
     <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-6">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-300 text-slate-950 shadow-glow">
             <Github className="h-4 w-4" strokeWidth={2.2} />
           </span>
           <span className="text-[15px] font-semibold tracking-tight">
@@ -40,7 +40,7 @@ export default async function LandingPage() {
         </div>
         <Link
           href="/api/auth/github/start"
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-zinc-200 transition hover:border-white/20 hover:bg-white/10"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-4 text-sm text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.08]"
         >
           <Github className="h-4 w-4" />
           Accedi
@@ -63,14 +63,14 @@ export default async function LandingPage() {
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/api/auth/github/start"
-              className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-blue-600 px-6 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+              className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_14px_42px_-20px_rgba(99,102,241,0.9)] transition hover:brightness-110"
             >
               <Github className="h-4 w-4" />
               Continua con GitHub
             </Link>
             <Link
               href="/login"
-              className="inline-flex h-12 items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-6 text-sm text-zinc-300 transition hover:border-white/20 hover:bg-white/[0.08]"
             >
               Ho già un account
             </Link>
@@ -93,7 +93,7 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 py-6 text-center text-xs text-zinc-600">
+      <footer className="border-t border-white/[0.07] py-6 text-center text-xs text-zinc-600">
         Costruito con Next.js, Neon e AI · deploy su Vercel
       </footer>
     </div>

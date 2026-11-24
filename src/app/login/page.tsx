@@ -36,7 +36,7 @@ export default async function LoginPage({
     <div className="flex min-h-screen items-center justify-center px-5 py-10">
       <div className="w-full max-w-md animate-fade-up">
         <Link href="/" className="mb-8 flex items-center justify-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-300 text-slate-950 shadow-glow">
             <Github className="h-5 w-5" strokeWidth={2.2} />
           </span>
           <span className="text-lg font-semibold tracking-tight">
@@ -51,14 +51,14 @@ export default async function LoginPage({
           </p>
 
           {message ? (
-            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-800">
+            <div className="mt-5 rounded-xl border border-rose-400/20 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-200">
               {message}
             </div>
           ) : null}
 
           <Link
             href="/api/auth/github/start"
-            className="mt-6 flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-blue-600 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            className="mt-6 flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-sm font-medium text-white shadow-[0_14px_42px_-20px_rgba(99,102,241,0.9)] transition hover:brightness-110"
           >
             <Github className="h-4 w-4" />
             Continua con GitHub

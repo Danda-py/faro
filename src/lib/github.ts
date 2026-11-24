@@ -107,6 +107,22 @@ export async function getRepo(token: string, owner: string, repo: string) {
   return gh<GithubRepo>(token, `/repos/${owner}/${repo}`);
 }
 
+export async function updateRepo(
+  token: string,
+  owner: string,
+  repo: string,
+  patch: { name?: string; description?: string | null; private?: boolean; archived?: boolean },
+) {
+  return gh<GithubRepo>(token, `/repos/${owner}/${repo}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function deleteRepo(token: string, owner: string, repo: string) {
+  return gh<void>(token, `/repos/${owner}/${repo}`, { method: "DELETE" });
+}
+
 export async function listBranches(token: string, owner: string, repo: string) {
   return gh<GithubBranch[]>(token, `/repos/${owner}/${repo}/branches?per_page=100`);
 }

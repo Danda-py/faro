@@ -22,11 +22,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AccountProvider initialAccounts={user.accounts.map(publicAccount)}>
-      <div className="mx-auto flex w-full max-w-[1560px] flex-col gap-4 p-4 md:flex-row">
+      <div className="mx-auto flex w-full max-w-[1560px] flex-col gap-4 p-3 md:flex-row md:gap-5 md:p-5">
         <Sidebar
           user={{ login: user.login, name: user.name, avatarUrl: user.avatarUrl }}
         />
-        <main className="min-w-0 flex-1 pb-16">{children}</main>
+        <main className="min-w-0 flex-1 pb-16 md:pb-8">{children}</main>
       </div>
     </AccountProvider>
   );

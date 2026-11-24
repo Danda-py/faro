@@ -31,9 +31,9 @@ export function Sidebar({
   const { accounts, currentId, setCurrentId } = useAccount();
 
   return (
-    <aside className="glass flex w-full flex-col gap-6 p-4 md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:w-64 md:shrink-0">
+    <aside className="glass flex w-full flex-col gap-5 p-4 md:sticky md:top-5 md:h-[calc(100vh-2.5rem)] md:w-64 md:shrink-0">
       <Link href="/dashboard" className="flex items-center gap-2.5 px-1.5 pt-1">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-300 text-slate-950 shadow-glow">
           <Github className="h-4 w-4" strokeWidth={2.2} />
         </span>
         <span className="text-[15px] font-semibold tracking-tight">
@@ -59,7 +59,7 @@ export function Sidebar({
 
       <div className="hidden flex-1 md:block" />
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+      <div className="rounded-xl border border-white/[0.08] bg-black/10 p-3">
         <p className="label-base mb-2 !text-[10px]">Account attivo</p>
         <select
           value={currentId ?? ""}
@@ -68,7 +68,7 @@ export function Sidebar({
         >
           {accounts.length === 0 ? <option value="">Nessun account</option> : null}
           {accounts.map((account) => (
-            <option key={account.id} value={account.id} className="bg-white text-slate-800">
+            <option key={account.id} value={account.id} className="bg-ink-900 text-zinc-200">
               {account.label || account.login}
             </option>
           ))}
@@ -81,7 +81,7 @@ export function Sidebar({
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-2.5">
+      <div className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-black/10 p-2.5">
         {user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

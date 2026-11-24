@@ -34,12 +34,27 @@ model GithubAccount {
   label       String?
   tokenCipher String
   scope       String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isDefault   Boolean                 @default(false)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  repoPreferences GithubRepoPreference[]
 
   @@unique([userId, githubId])
   @@index([userId])
+}
+
+model GithubRepoPreference {
+  id        String        @id @default(cuid())
+  accountId String
+  account   GithubAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  repoId    Int
+  owner     String
+  repo      String
+  hidden    Boolean       @default(true)
+  updatedAt DateTime      @updatedAt
+
+  @@unique([accountId, repoId])
+  @@index([accountId, hidden])
 }
 
 model AiProvider {
