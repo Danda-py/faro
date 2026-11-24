@@ -159,7 +159,17 @@ export async function GET(req: Request) {
       }
     }
   } catch (error) {
-    console.error("[auth] persist failed", error);
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String(error.code)
+        : "";
+    console.error("[auth] persist failed", { code, name: error instanceof Error ? error.name : "unknown" });
+
+    if (code === "P2021" || code === "P2022") return fail("database_schema");
+    if (code === "P1000") return fail("database_auth");
+    if (code === "P1001" || code === "P1002" || code === "P1017") {
+      return fail("database_connection");
+    }
     return fail("db_error");
   }
 

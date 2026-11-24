@@ -11,7 +11,13 @@ const ERRORS: Record<string, string> = {
   state_mismatch: "Verifica di sicurezza fallita. Riprova.",
   token_exchange: "Scambio del token fallito. Controlla le credenziali OAuth.",
   oauth_not_configured: "OAuth GitHub non configurato sul server.",
-  db_error: "Impossibile salvare l'account sul database.",
+  database_schema:
+    "Il database Faro non ha ancora lo schema aggiornato. Dal terminale del progetto esegui `npm run db:push`, poi riprova.",
+  database_auth:
+    "Neon ha rifiutato le credenziali del database. Controlla DATABASE_URL e DIRECT_URL; se la password è stata condivisa, ruotala prima.",
+  database_connection:
+    "Il server Faro non riesce a raggiungere Neon. Verifica DATABASE_URL, DIRECT_URL e che il database sia attivo.",
+  db_error: "Impossibile salvare l'account sul database. Controlla i log server per il codice Prisma.",
   unknown_user: "Impossibile identificare l'utente.",
 };
 
@@ -30,7 +36,7 @@ export default async function LoginPage({
     <div className="flex min-h-screen items-center justify-center px-5 py-10">
       <div className="w-full max-w-md animate-fade-up">
         <Link href="/" className="mb-8 flex items-center justify-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-ink-950 shadow-glow">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
             <Github className="h-5 w-5" strokeWidth={2.2} />
           </span>
           <span className="text-lg font-semibold tracking-tight">
@@ -45,14 +51,14 @@ export default async function LoginPage({
           </p>
 
           {message ? (
-            <div className="mt-5 rounded-xl border border-rose-400/25 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-200">
+            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-800">
               {message}
             </div>
           ) : null}
 
           <Link
             href="/api/auth/github/start"
-            className="mt-6 flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-500 text-sm font-medium text-white shadow-[0_16px_50px_-16px_rgba(139,92,246,0.9)] transition hover:brightness-110"
+            className="mt-6 flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-blue-600 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
           >
             <Github className="h-4 w-4" />
             Continua con GitHub

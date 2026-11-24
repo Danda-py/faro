@@ -9,11 +9,11 @@ type Size = "sm" | "md";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-500 text-white shadow-[0_10px_40px_-12px_rgba(139,92,246,0.8)] hover:brightness-110",
-  ghost: "border border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10 hover:border-white/20",
+    "bg-blue-600 text-white shadow-sm hover:bg-blue-700",
+  ghost: "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
   danger:
-    "border border-rose-400/25 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/40",
-  subtle: "text-zinc-400 hover:text-white hover:bg-white/5",
+    "border border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100",
+  subtle: "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
 };
 
 const sizes: Record<Size, string> = {
@@ -94,9 +94,9 @@ export function Alert({
   children: React.ReactNode;
 }) {
   const tones = {
-    error: "border-rose-400/25 bg-rose-500/10 text-rose-200",
-    success: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200",
-    info: "border-cyan-400/25 bg-cyan-500/10 text-cyan-100",
+    error: "border-rose-200 bg-rose-50 text-rose-800",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    info: "border-blue-200 bg-blue-50 text-blue-800",
   } as const;
 
   return (

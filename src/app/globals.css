@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   * {
@@ -12,12 +12,14 @@
   }
 
   body {
-    @apply bg-ink-950 text-zinc-100 antialiased;
+    background: #f5f6f8;
+    color: #172033;
+    @apply antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   ::selection {
-    background: rgba(139, 92, 246, 0.35);
+    background: rgba(37, 99, 235, 0.18);
   }
 
   ::-webkit-scrollbar {
@@ -30,48 +32,91 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(71, 85, 105, 0.28);
     border: 3px solid transparent;
     border-radius: 999px;
     background-clip: content-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(71, 85, 105, 0.45);
     background-clip: content-box;
   }
+
+  [class~="text-zinc-100"] { color: #172033 !important; }
+  [class~="text-zinc-200"] { color: #253047 !important; }
+  [class~="text-zinc-300"] { color: #344158 !important; }
+  [class~="text-zinc-400"] { color: #475569 !important; }
+  [class~="text-zinc-500"] { color: #64748b !important; }
+  [class~="text-zinc-600"] { color: #8290a4 !important; }
+  [class~="text-violet-300"], [class~="text-violet-400"] { color: #2563eb !important; }
+  [class~="text-cyan-300"] { color: #2563eb !important; }
+  [class~="border-white/10"], [class~="border-white/5"] { border-color: #e2e8f0 !important; }
+  [class~="bg-white/5"], [class~="bg-white/[0.04]"], [class~="bg-white/[0.03]"], [class~="bg-white/[0.02]"] { background-color: #ffffff !important; }
+  [class~="bg-white/10"] { background-color: #f1f5f9 !important; }
+  [class~="ring-white/15"] { --tw-ring-color: #dbe3ee !important; }
 }
 
 @layer components {
   .glass {
-    @apply rounded-2xl border border-white/10 bg-white/[0.04] shadow-glass backdrop-blur-xl;
+    @apply rounded-2xl border bg-white;
+    border-color: #e5e9f0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035), 0 8px 24px -18px rgba(15, 23, 42, 0.24);
   }
 
   .glass-hover {
-    @apply transition-all duration-300 hover:border-white/20 hover:bg-white/[0.065];
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .glass-hover:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.24);
+    transform: translateY(-1px);
   }
 
   .input-base {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/50 focus:bg-white/[0.06] focus:ring-4 focus:ring-violet-500/10;
+    @apply w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition;
+    border-color: #d8dee8;
+    color: #172033;
+  }
+
+  .input-base::placeholder { color: #94a3b8; }
+  .input-base:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 
   .label-base {
-    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500;
+    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[0.12em];
+    color: #64748b;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-zinc-300;
+    @apply inline-flex items-center gap-1.5 rounded-full border bg-white px-2.5 py-1 text-[11px];
+    border-color: #e2e8f0;
+    color: #475569;
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent;
+    color: #2563eb;
+    background: none;
+    -webkit-text-fill-color: currentColor;
   }
 
   .nav-link {
-    @apply flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-zinc-400 transition hover:bg-white/[0.06] hover:text-zinc-100;
+    @apply flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition;
+    color: #64748b;
+  }
+
+  .nav-link:hover {
+    background: #f1f5f9;
+    color: #172033;
   }
 
   .nav-link-active {
-    @apply border border-white/10 bg-white/[0.08] text-white shadow-[0_0_30px_-16px_rgba(139,92,246,0.9)];
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1d4ed8 !important;
+    box-shadow: none;
   }
 }

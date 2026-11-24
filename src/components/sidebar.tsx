@@ -33,7 +33,7 @@ export function Sidebar({
   return (
     <aside className="glass flex w-full flex-col gap-6 p-4 md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:w-64 md:shrink-0">
       <Link href="/dashboard" className="flex items-center gap-2.5 px-1.5 pt-1">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-ink-950 shadow-glow">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
           <Github className="h-4 w-4" strokeWidth={2.2} />
         </span>
         <span className="text-[15px] font-semibold tracking-tight">
@@ -68,7 +68,7 @@ export function Sidebar({
         >
           {accounts.length === 0 ? <option value="">Nessun account</option> : null}
           {accounts.map((account) => (
-            <option key={account.id} value={account.id} className="bg-ink-900">
+            <option key={account.id} value={account.id} className="bg-white text-slate-800">
               {account.label || account.login}
             </option>
           ))}
