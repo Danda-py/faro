@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { publicAccount } from "@/lib/accounts";
+import { publicAccount, resolveAccount } from "@/lib/accounts";
+import { getUser, updateGithubProfile } from "@/lib/github";
 import { handleError, unauthorized } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getSession();
   if (!session) return unauthorized();
 
@@ -14,8 +15,30 @@ export async function GET() {
     where: { userId: session.userId },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
+  const params = new URL(req.url).searchParams;
+  const profileAccountId = params.get("profile");
+  if (!profileAccountId) {
+    return NextResponse.json({ accounts: accounts.map(publicAccount) });
+  }
 
-  return NextResponse.json({ accounts: accounts.map(publicAccount) });
+  try {
+    const account = await resolveAccount(session.userId, profileAccountId);
+    if (!account) return NextResponse.json({ error: "Account non trovato." }, { status: 404 });
+    const profile = await getUser(account.token);
+    return NextResponse.json({
+      profile: {
+        login: profile.login,
+        name: profile.name ?? "",
+        bio: profile.bio ?? "",
+        company: profile.company ?? "",
+        location: profile.location ?? "",
+        blog: profile.blog ?? "",
+        twitter_username: profile.twitter_username ?? "",
+      },
+    });
+  } catch (error) {
+    return handleError(error);
+  }
 }
 
 export async function PATCH(req: Request) {
@@ -27,6 +50,14 @@ export async function PATCH(req: Request) {
       id?: string;
       label?: string | null;
       isDefault?: boolean;
+      profile?: {
+        name?: string;
+        bio?: string;
+        company?: string;
+        location?: string;
+        blog?: string;
+        twitter_username?: string;
+      };
     };
     if (!body.id) return NextResponse.json({ error: "id mancante." }, { status: 400 });
 
@@ -34,6 +65,59 @@ export async function PATCH(req: Request) {
       where: { id: body.id, userId: session.userId },
     });
     if (!account) return NextResponse.json({ error: "Account non trovato." }, { status: 404 });
+
+    if (body.profile) {
+      const accountWithToken = await resolveAccount(session.userId, account.id);
+      if (!accountWithToken) return NextResponse.json({ error: "Account non trovato." }, { status: 404 });
+      const profile = body.profile;
+      const lengths: Record<string, number> = {
+        name: 255,
+        bio: 160,
+        company: 255,
+        location: 255,
+        blog: 255,
+        twitter_username: 39,
+      };
+      for (const [field, limit] of Object.entries(lengths)) {
+        const value = profile[field as keyof typeof profile];
+        if (value !== undefined && value.length > limit) {
+          return NextResponse.json({ error: `${field} supera il limite di ${limit} caratteri.` }, { status: 400 });
+        }
+      }
+      const updatedProfile = await updateGithubProfile(accountWithToken.token, {
+        ...(profile.name !== undefined ? { name: profile.name.trim() || null } : {}),
+        ...(profile.bio !== undefined ? { bio: profile.bio.trim() || null } : {}),
+        ...(profile.company !== undefined ? { company: profile.company.trim() || null } : {}),
+        ...(profile.location !== undefined ? { location: profile.location.trim() || null } : {}),
+        ...(profile.blog !== undefined ? { blog: profile.blog.trim() || null } : {}),
+        ...(profile.twitter_username !== undefined
+          ? { twitter_username: profile.twitter_username.trim().replace(/^@/, "") || null }
+          : {}),
+      });
+      await prisma.githubAccount.update({
+        where: { id: account.id },
+        data: {
+          name: updatedProfile.name,
+          avatarUrl: updatedProfile.avatar_url,
+          email: updatedProfile.email,
+        },
+      });
+      const owner = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { primaryGithubId: true },
+      });
+      if (owner?.primaryGithubId === account.githubId) {
+        await prisma.user.update({
+          where: { id: session.userId },
+          data: {
+            name: updatedProfile.name,
+            avatarUrl: updatedProfile.avatar_url,
+            email: updatedProfile.email,
+          },
+        });
+      }
+      return NextResponse.json({ profile: updatedProfile });
+    }
 
     if (body.isDefault) {
       await prisma.githubAccount.updateMany({

@@ -45,6 +45,11 @@ export type GithubUser = {
   name: string | null;
   avatar_url: string;
   email: string | null;
+  bio?: string | null;
+  company?: string | null;
+  location?: string | null;
+  blog?: string | null;
+  twitter_username?: string | null;
 };
 
 export type GithubEmail = { email: string; primary: boolean; verified: boolean };
@@ -86,6 +91,16 @@ export type GithubBranch = { name: string };
 
 export async function getUser(token: string) {
   return gh<GithubUser>(token, "/user");
+}
+
+export async function updateGithubProfile(
+  token: string,
+  profile: { name?: string | null; bio?: string | null; company?: string | null; location?: string | null; blog?: string | null; twitter_username?: string | null },
+) {
+  return gh<GithubUser>(token, "/user", {
+    method: "PATCH",
+    body: JSON.stringify(profile),
+  });
 }
 
 export async function getUserEmails(token: string) {
