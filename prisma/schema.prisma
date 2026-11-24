@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  primaryGithubId    String              @unique
+  login              String
+  name               String?
+  email              String?
+  avatarUrl          String?
+  createdAt          DateTime            @default(now())
+  accounts           GithubAccount[]
+  messages           AiMessage[]
+  aiProviders        AiProvider[]
+  cleanupSuggestions CleanupSuggestion[]
+}
+
+model GithubAccount {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubId    String
+  login       String
+  name        String?
+  avatarUrl   String?
+  email       String?
+  label       String?
+  tokenCipher String
+  scope       String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, githubId])
+  @@index([userId])
+}
+
+model AiProvider {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String
+  kind         String
+  baseUrl      String
+  model        String
+  apiKeyCipher String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model AiMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model CleanupSuggestion {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId    String
+  accountLogin String
+  owner        String
+  repo         String
+  ref          String
+  path         String
+  reason       String
+  confidence   Float    @default(0.5)
+  size         Int      @default(0)
+  sha          String
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+
+  @@index([userId, status])
+  @@index([userId, owner, repo])
+}
