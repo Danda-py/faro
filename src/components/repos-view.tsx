@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  ExternalLink,
   Eye,
   EyeOff,
   FolderGit2,
@@ -267,11 +268,24 @@ export function ReposView() {
                 {repo.description || "Nessuna descrizione."}
               </p>
             </Link>
+            <a
+              href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Visita ${repo.fullName} su GitHub`}
+              title="Visita su GitHub"
+              className="absolute bottom-11 right-3 grid h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.08] hover:text-cyan-200"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
             <details className="absolute right-3 top-3">
               <summary className="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-lg text-zinc-500 hover:bg-white/[0.08] hover:text-white" aria-label={`Azioni per ${repo.name}`}>
                 <MoreHorizontal className="h-4 w-4" />
               </summary>
               <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-white/10 bg-[#111522]/95 p-1.5 shadow-2xl backdrop-blur-xl">
+                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
+                  <ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub
+                </a>
                 <button onClick={() => openEditor(repo)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
                   <Pencil className="h-3.5 w-3.5" /> Modifica proprietà
                 </button>

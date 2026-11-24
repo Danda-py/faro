@@ -84,11 +84,15 @@ Firma le sessioni e deriva la chiave AES-256-GCM per token GitHub e chiavi AI.
 ### 5. Cron di pulizia
 
 `vercel.json` registra `/api/cron/cleanup` ogni giorno alle **04:00 UTC** (Vercel Cron usa
-UTC: in Italia sono le 05:00 o le 06:00 con l'ora legale). Su Vercel:
+UTC: in Italia sono le 05:00 o le 06:00 con l'ora legale). La configurazione è nel codice,
+ma il cron esiste in produzione solo quando il progetto è collegato a Vercel e deployato.
 
-1. Imposta `CRON_SECRET` tra le variabili d'ambiente.
-2. Vercel invierà automaticamente `Authorization: Bearer $CRON_SECRET`.
-3. Senza `CRON_SECRET` l'endpoint risponde 503 e il cron resta disattivato.
+1. In Vercel collega/importa questo progetto GitHub e fai un deploy Production.
+2. Imposta `CRON_SECRET` tra le variabili d'ambiente di Production (usa lo stesso valore
+   casuale configurato dal progetto; non inserirlo nel repository).
+3. Fai un nuovo deploy dopo aver salvato le variabili. Vercel invierà automaticamente
+   `Authorization: Bearer $CRON_SECRET`.
+4. Senza `CRON_SECRET` l'endpoint risponde 503 e il job non produce proposte.
 
 In locale puoi lanciarlo a mano:
 
