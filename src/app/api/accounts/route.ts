@@ -28,6 +28,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       profile: {
         login: profile.login,
+        avatar_url: profile.avatar_url,
         name: profile.name ?? "",
         bio: profile.bio ?? "",
         company: profile.company ?? "",
@@ -91,6 +92,14 @@ export async function PATCH(req: Request) {
         }
         if (value !== undefined && value.length > limit) {
           return NextResponse.json({ error: `${field} supera il limite di ${limit} caratteri.` }, { status: 400 });
+        }
+      }
+      if (profile.blog?.trim()) {
+        try {
+          const blogUrl = new URL(profile.blog.trim());
+          if (blogUrl.protocol !== "https:" && blogUrl.protocol !== "http:") throw new Error("protocol");
+        } catch {
+          return NextResponse.json({ error: "Inserisci un URL completo valido per il sito web (http o https)." }, { status: 400 });
         }
       }
       const updatedProfile = await updateGithubProfile(accountWithToken.token, {

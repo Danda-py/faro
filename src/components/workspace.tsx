@@ -14,6 +14,8 @@ import {
   FolderPlus,
   Loader2,
   Lock,
+  MoreHorizontal,
+  Pencil,
   RefreshCw,
   Save,
   Search,
@@ -131,6 +133,9 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   const [notice, setNotice] = useState("");
 
   const [showNew, setShowNew] = useState(false);
+  const [folderAction, setFolderAction] = useState<{ path: string; action: "move" | "delete" } | null>(null);
+  const [folderDestination, setFolderDestination] = useState("");
+  const [folderSaving, setFolderSaving] = useState(false);
   const [newKind, setNewKind] = useState<"file" | "folder">("file");
   const [newPath, setNewPath] = useState("");
   const [uploadContent, setUploadContent] = useState<string | null>(null);
@@ -271,6 +276,30 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
       setError(err instanceof Error ? err.message : "Creazione fallita.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function manageFolder(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!folderAction || !currentId) return;
+    const folderFiles = treeData?.tree.filter((entry) => entry.path.startsWith(`${folderAction.path}/`)) ?? [];
+    if (folderAction.action === "delete" && !window.confirm(`Eliminare la cartella ${folderAction.path} e tutti i suoi ${folderFiles.length} file dal branch ${branch}? L'operazione crea un commit.`)) return;
+    if (folderAction.action === "move" && !window.confirm(`Spostare ${folderFiles.length} file da ${folderAction.path} a ${folderDestination.trim()} nel branch ${branch}? L'operazione crea un commit.`)) return;
+    setFolderSaving(true);
+    setError("");
+    try {
+      await apiFetch("/api/github/tree", {
+        method: "PATCH",
+        body: JSON.stringify({ accountId: currentId, owner, repo, branch, sourcePath: folderAction.path, action: folderAction.action, ...(folderAction.action === "move" ? { destinationPath: folderDestination.trim() } : {}) }),
+      });
+      setFolderAction(null);
+      setFolderDestination("");
+      await loadTree(branch);
+      setNotice(folderAction.action === "delete" ? `Cartella ${folderAction.path} eliminata.` : `Cartella spostata in ${folderDestination.trim()}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Operazione sulla cartella fallita.");
+    } finally {
+      setFolderSaving(false);
     }
   }
 
@@ -496,6 +525,17 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
       {error ? <Alert>{error}</Alert> : null}
       {notice ? <Alert tone="success">{notice}</Alert> : null}
 
+      {folderAction ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !folderSaving) setFolderAction(null); }}>
+          <form onSubmit={manageFolder} className="glass w-full max-w-lg space-y-4 p-5" role="dialog" aria-modal="true" aria-labelledby="folder-action-title">
+            <div><h2 id="folder-action-title" className="text-base font-semibold">{folderAction.action === "delete" ? "Elimina cartella" : "Rinomina o sposta cartella"}</h2><p className="mt-1 break-all font-mono text-xs text-zinc-500">{folderAction.path}</p></div>
+            {folderAction.action === "move" ? <label className="label-base block">Nuovo percorso<Input autoFocus className="mt-1.5" value={folderDestination} onChange={(event) => setFolderDestination(event.target.value)} placeholder="src/components" required /></label> : <Alert>Verranno eliminati {treeData?.tree.filter((entry) => entry.path.startsWith(`${folderAction.path}/`)).length ?? 0} file dal branch <code>{branch}</code>. La modifica sarà un commit unico su GitHub.</Alert>}
+            {folderAction.action === "move" ? <Alert>La rinomina/spostamento crea un commit sul branch <code>{branch}</code>. I file saranno spostati mantenendo contenuti e permessi.</Alert> : null}
+            <div className="flex justify-end gap-2"><Button type="button" variant="ghost" disabled={folderSaving} onClick={() => setFolderAction(null)}>Annulla</Button><Button type="submit" variant={folderAction.action === "delete" ? "danger" : "primary"} loading={folderSaving}>{folderAction.action === "delete" ? "Elimina" : "Sposta cartella"}</Button></div>
+          </form>
+        </div>
+      ) : null}
+
       {showNew ? (
         <form
           onSubmit={(event) => {
@@ -558,14 +598,14 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
               </div>
             ) : null}
             {filteredTree.map((entry) => entry.folder ? (
+              <div key={`dir:${entry.path}`} className="group flex items-center rounded-lg pr-1 hover:bg-white/[0.06]">
               <button
-                key={`dir:${entry.path}`}
                 onClick={() => setExpandedFolders((previous) => {
                   const next = new Set(previous);
                   if (next.has(entry.path)) next.delete(entry.path); else next.add(entry.path);
                   return next;
                 })}
-                className="flex w-full items-center gap-2 rounded-lg py-1.5 pr-2 text-left text-[12.5px] text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
+                className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2 text-left text-[12.5px] text-zinc-300 transition hover:text-white"
                 style={{ paddingLeft: `${10 + entry.depth * 14}px` }}
                 title={entry.path}
               >
@@ -573,6 +613,14 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 <Folder className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
                 <span className="truncate">{entry.name}</span>
               </button>
+              <details className="relative shrink-0">
+                <summary className="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-md text-zinc-600 hover:bg-white/10 hover:text-white" aria-label={`Gestisci cartella ${entry.path}`}><MoreHorizontal className="h-3.5 w-3.5" /></summary>
+                <div className="absolute right-0 z-30 mt-1 w-44 rounded-xl border border-white/10 bg-[#111522]/95 p-1 shadow-2xl backdrop-blur-xl">
+                  <button onClick={() => { setFolderAction({ path: entry.path, action: "move" }); setFolderDestination(entry.path.split("/").slice(0, -1).concat(`${entry.name}-nuova`).join("/")); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"><Pencil className="h-3.5 w-3.5" /> Rinomina / sposta</button>
+                  <button onClick={() => setFolderAction({ path: entry.path, action: "delete" })} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/10"><Trash2 className="h-3.5 w-3.5" /> Elimina cartella</button>
+                </div>
+              </details>
+              </div>
             ) : (
               <button
                 key={`file:${entry.path}`}

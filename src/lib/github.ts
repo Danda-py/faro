@@ -74,6 +74,7 @@ export type GithubTreeEntry = {
   type: "blob" | "tree" | "commit";
   size?: number;
   sha: string;
+  mode?: string;
 };
 
 export type GithubContent = {
@@ -147,6 +148,71 @@ export async function getTree(token: string, owner: string, repo: string, ref: s
     token,
     `/repos/${owner}/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`,
   );
+}
+
+export async function moveOrDeleteFolder(
+  token: string,
+  owner: string,
+  repo: string,
+  input: { branch: string; sourcePath: string; destinationPath?: string },
+) {
+  const tree = await getTree(token, owner, repo, input.branch);
+  if (tree.truncated) throw new Error("Folder is too large for a single operation.");
+
+  const sourcePath = input.sourcePath.split("/").filter(Boolean).join("/");
+  if (!sourcePath || sourcePath.split("/").some((part) => part === "." || part === "..")) {
+    throw new Error("Percorso cartella non valido.");
+  }
+  const sourcePrefix = `${sourcePath}/`;
+  const files = tree.tree.filter((entry) => entry.type === "blob");
+  const sourceFiles = files.filter((entry) => entry.path.startsWith(sourcePrefix));
+  if (sourceFiles.length === 0) throw new Error("Folder contains no files or no longer exists.");
+
+  const destination = input.destinationPath?.split("/").filter(Boolean).join("/");
+  if (destination && (destination === sourcePath || destination.startsWith(sourcePrefix) || destination.split("/").some((part) => part === "." || part === ".."))) {
+    throw new Error("Invalid destination path: a folder cannot be moved inside itself.");
+  }
+  if (destination) {
+    const unaffectedFiles = files.filter((entry) => !entry.path.startsWith(sourcePrefix));
+    const targetPaths = sourceFiles.map((entry) => `${destination}/${entry.path.slice(sourcePrefix.length)}`);
+    const collision = targetPaths.some((target) => unaffectedFiles.some((entry) =>
+      entry.path === target || entry.path.startsWith(`${target}/`) || target.startsWith(`${entry.path}/`),
+    ));
+    if (collision) throw new Error("A destination file or directory already exists.");
+  }
+
+  const branchPath = input.branch.split("/").map(encodeURIComponent).join("/");
+  const base = await gh<{ object: { sha: string } }>(token, `/repos/${owner}/${repo}/git/ref/heads/${branchPath}`);
+  const parent = await gh<{ tree: { sha: string } }>(token, `/repos/${owner}/${repo}/git/commits/${base.object.sha}`);
+  const treeItems: Array<{ path: string; mode: string; type: "blob"; sha: string | null }> = [];
+  for (const file of sourceFiles) {
+    if (destination) {
+      treeItems.push({
+        path: `${destination}/${file.path.slice(sourcePrefix.length)}`,
+        mode: file.mode ?? "100644",
+        type: "blob",
+        sha: file.sha,
+      });
+    }
+    treeItems.push({ path: file.path, mode: file.mode ?? "100644", type: "blob", sha: null });
+  }
+  const nextTree = await gh<{ sha: string }>(token, `/repos/${owner}/${repo}/git/trees`, {
+    method: "POST",
+    body: JSON.stringify({ base_tree: parent.tree.sha, tree: treeItems }),
+  });
+  const commit = await gh<{ sha: string }>(token, `/repos/${owner}/${repo}/git/commits`, {
+    method: "POST",
+    body: JSON.stringify({
+      message: destination ? `Sposta ${sourcePath} in ${destination}` : `Elimina cartella ${sourcePath}`,
+      tree: nextTree.sha,
+      parents: [base.object.sha],
+    }),
+  });
+  await gh(token, `/repos/${owner}/${repo}/git/refs/heads/${branchPath}`, {
+    method: "PATCH",
+    body: JSON.stringify({ sha: commit.sha, force: false }),
+  });
+  return { moved: sourceFiles.length, branch: input.branch };
 }
 
 export async function getContent(

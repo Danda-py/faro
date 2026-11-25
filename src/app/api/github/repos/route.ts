@@ -18,14 +18,25 @@ export async function GET(req: Request) {
 
     const page = Math.max(1, Number(params.get("page") ?? "1") || 1);
     const repos = await listRepos(account.token, page);
-    const hidden = await prisma.githubRepoPreference.findMany({
-      where: { accountId: account.id, hidden: true },
-      select: { repoId: true },
+    const preferences = await prisma.githubRepoPreference.findMany({
+      where: { accountId: account.id },
+      select: { repoId: true, hidden: true, favorite: true, lastOpenedAt: true },
+    });
+    const updatedAccount = await prisma.githubAccount.update({
+      where: { id: account.id },
+      data: { reposSyncedAt: new Date() },
+      select: { reposSyncedAt: true },
     });
 
     return NextResponse.json({
       account: { id: account.id, login: account.login },
-      hiddenRepoIds: hidden.map((item) => item.repoId),
+      hiddenRepoIds: preferences.filter((item) => item.hidden).map((item) => item.repoId),
+      favoriteRepoIds: preferences.filter((item) => item.favorite).map((item) => item.repoId),
+      recentRepoIds: preferences
+        .filter((item) => item.lastOpenedAt)
+        .sort((a, b) => b.lastOpenedAt!.getTime() - a.lastOpenedAt!.getTime())
+        .map((item) => item.repoId),
+      syncedAt: updatedAccount.reposSyncedAt,
       page,
       hasMore: repos.length === 100,
       repos: repos.map((repo) => ({
@@ -59,25 +70,31 @@ export async function POST(req: Request) {
       owner?: string;
       repo?: string;
       hidden?: boolean;
+      favorite?: boolean;
+      opened?: boolean;
     };
-    if (!body.accountId || !Number.isInteger(body.repoId) || !body.owner || !body.repo || typeof body.hidden !== "boolean") {
+    if (!body.accountId || !Number.isInteger(body.repoId) || !body.owner || !body.repo) {
       return NextResponse.json({ error: "Dati repository non validi." }, { status: 400 });
+    }
+    if (typeof body.hidden !== "boolean" && typeof body.favorite !== "boolean" && body.opened !== true) {
+      return NextResponse.json({ error: "Specifica una preferenza da aggiornare." }, { status: 400 });
     }
     const account = await resolveAccount(session.userId, body.accountId);
     if (!account) return NextResponse.json({ error: "Account GitHub non trovato." }, { status: 404 });
 
+    const data = {
+      owner: body.owner,
+      repo: body.repo,
+      ...(typeof body.hidden === "boolean" ? { hidden: body.hidden } : {}),
+      ...(typeof body.favorite === "boolean" ? { favorite: body.favorite } : {}),
+      ...(body.opened ? { lastOpenedAt: new Date() } : {}),
+    };
     await prisma.githubRepoPreference.upsert({
       where: { accountId_repoId: { accountId: account.id, repoId: body.repoId! } },
-      create: {
-        accountId: account.id,
-        repoId: body.repoId!,
-        owner: body.owner,
-        repo: body.repo,
-        hidden: body.hidden,
-      },
-      update: { owner: body.owner, repo: body.repo, hidden: body.hidden },
+      create: { accountId: account.id, repoId: body.repoId!, hidden: body.hidden ?? false, ...data },
+      update: data,
     });
-    return NextResponse.json({ ok: true, hidden: body.hidden });
+    return NextResponse.json({ ok: true });
   } catch (error) {
     return handleError(error);
   }
@@ -144,13 +161,16 @@ export async function DELETE(req: Request) {
   if (!session) return unauthorized();
 
   try {
-    const body = (await req.json()) as { accountId?: string; owner?: string; repo?: string };
+    const body = (await req.json()) as { accountId?: string; owner?: string; repo?: string; repoId?: number };
     if (!body.accountId || !body.owner || !body.repo) {
       return NextResponse.json({ error: "accountId, owner e repo sono obbligatori." }, { status: 400 });
     }
     const account = await resolveAccount(session.userId, body.accountId);
     if (!account) return NextResponse.json({ error: "Account GitHub non trovato." }, { status: 404 });
     await deleteRepo(account.token, body.owner, body.repo);
+    if (Number.isInteger(body.repoId)) {
+      await prisma.githubRepoPreference.deleteMany({ where: { accountId: account.id, repoId: body.repoId } });
+    }
     return NextResponse.json({ ok: true });
   } catch (error) {
     return handleError(error);

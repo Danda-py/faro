@@ -1,12 +1,46 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
+import { prisma } from "@/lib/db";
 import { resolveAccount } from "@/lib/accounts";
-import { getRepo, getTree, listBranches } from "@/lib/github";
+import { getRepo, getTree, listBranches, moveOrDeleteFolder } from "@/lib/github";
 import { handleError, unauthorized } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 const MAX_ENTRIES = 4000;
+
+export async function PATCH(req: Request) {
+  const session = await getSession();
+  if (!session) return unauthorized();
+
+  try {
+    const body = (await req.json()) as {
+      accountId?: string;
+      owner?: string;
+      repo?: string;
+      branch?: string;
+      sourcePath?: string;
+      destinationPath?: string;
+      action?: "move" | "delete";
+    };
+    if (!body.owner || !body.repo || !body.branch || !body.sourcePath || !body.action) {
+      return NextResponse.json({ error: "Dati della cartella incompleti." }, { status: 400 });
+    }
+    if (body.action === "move" && !body.destinationPath?.trim()) {
+      return NextResponse.json({ error: "Indica il nuovo percorso della cartella." }, { status: 400 });
+    }
+    const account = await resolveAccount(session.userId, body.accountId);
+    if (!account) return NextResponse.json({ error: "Nessun account collegato." }, { status: 400 });
+    const result = await moveOrDeleteFolder(account.token, body.owner, body.repo, {
+      branch: body.branch,
+      sourcePath: body.sourcePath,
+      ...(body.action === "move" ? { destinationPath: body.destinationPath } : {}),
+    });
+    return NextResponse.json({ ok: true, ...result });
+  } catch (error) {
+    return handleError(error);
+  }
+}
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -35,6 +69,12 @@ export async function GET(req: Request) {
       repo,
       ref || repoInfo.default_branch,
     );
+
+    await prisma.githubRepoPreference.upsert({
+      where: { accountId_repoId: { accountId: account.id, repoId: repoInfo.id } },
+      create: { accountId: account.id, repoId: repoInfo.id, owner: repoInfo.owner.login, repo: repoInfo.name, hidden: false, lastOpenedAt: new Date() },
+      update: { owner: repoInfo.owner.login, repo: repoInfo.name, lastOpenedAt: new Date() },
+    });
 
     const blobs = tree.tree
       .filter((entry) => entry.type === "blob")

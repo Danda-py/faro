@@ -17,6 +17,10 @@ import {
   Star,
   Trash2,
   UserRound,
+  Clock3,
+  GitPullRequest,
+  CircleDot,
+  Star as StarIcon,
 } from "lucide-react";
 import { useAccount } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
@@ -47,6 +51,10 @@ export function ReposView() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [hiddenIds, setHiddenIds] = useState<number[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const [recentIds, setRecentIds] = useState<number[]>([]);
+  const [syncedAt, setSyncedAt] = useState<string | null>(null);
+  const [repoFilter, setRepoFilter] = useState<"all" | "favorites" | "recent">("all");
   const [showHidden, setShowHidden] = useState(false);
   const [editing, setEditing] = useState<Repo | null>(null);
   const [saving, setSaving] = useState(false);
@@ -65,10 +73,15 @@ export function ReposView() {
           accountId: currentId,
           page: String(targetPage),
         });
-        const data = await apiFetch<{ repos: Repo[]; hasMore: boolean; hiddenRepoIds: number[] }>(
+        const data = await apiFetch<{ repos: Repo[]; hasMore: boolean; hiddenRepoIds: number[]; favoriteRepoIds: number[]; recentRepoIds: number[]; syncedAt: string | null }>(
           `/api/github/repos?${params.toString()}`,
         );
-        if (!append) setHiddenIds(data.hiddenRepoIds);
+        if (!append) {
+          setHiddenIds(data.hiddenRepoIds);
+          setFavoriteIds(data.favoriteRepoIds);
+          setRecentIds(data.recentRepoIds);
+          setSyncedAt(data.syncedAt);
+        }
         setRepos((previous) => (append ? [...previous, ...data.repos] : data.repos));
         setHasMore(data.hasMore);
         setPage(targetPage);
@@ -92,6 +105,8 @@ export function ReposView() {
     const term = query.trim().toLowerCase();
     return repos.filter((repo) => {
       if (!showHidden && hiddenIds.includes(repo.id)) return false;
+      if (repoFilter === "favorites" && !favoriteIds.includes(repo.id)) return false;
+      if (repoFilter === "recent" && !recentIds.includes(repo.id)) return false;
       if (!term) return true;
       return (
         repo.name.toLowerCase().includes(term) ||
@@ -99,23 +114,28 @@ export function ReposView() {
         (repo.description ?? "").toLowerCase().includes(term)
       );
     });
-  }, [query, repos, hiddenIds, showHidden]);
+  }, [query, repos, hiddenIds, showHidden, repoFilter, favoriteIds, recentIds]);
+
+  async function updatePreference(repo: Repo, preference: { hidden?: boolean; favorite?: boolean; opened?: boolean }) {
+    if (!currentId) return;
+    await apiFetch("/api/github/repos", {
+      method: "POST",
+      body: JSON.stringify({ accountId: currentId, repoId: repo.id, owner: repo.owner, repo: repo.name, ...preference }),
+    });
+    if (typeof preference.hidden === "boolean") {
+      setHiddenIds((ids) => preference.hidden ? [...new Set([...ids, repo.id])] : ids.filter((id) => id !== repo.id));
+    }
+    if (typeof preference.favorite === "boolean") {
+      setFavoriteIds((ids) => preference.favorite ? [...new Set([...ids, repo.id])] : ids.filter((id) => id !== repo.id));
+    }
+    if (preference.opened) setRecentIds((ids) => [repo.id, ...ids.filter((id) => id !== repo.id)].slice(0, 8));
+  }
 
   async function toggleHidden(repo: Repo) {
     if (!currentId) return;
     const hidden = !hiddenIds.includes(repo.id);
     try {
-      await apiFetch("/api/github/repos", {
-        method: "POST",
-        body: JSON.stringify({
-          accountId: currentId,
-          repoId: repo.id,
-          owner: repo.owner,
-          repo: repo.name,
-          hidden,
-        }),
-      });
-      setHiddenIds((ids) => hidden ? [...ids, repo.id] : ids.filter((id) => id !== repo.id));
+      await updatePreference(repo, { hidden });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Impossibile aggiornare la dashboard.");
     }
@@ -162,10 +182,12 @@ export function ReposView() {
     try {
       await apiFetch("/api/github/repos", {
         method: "DELETE",
-        body: JSON.stringify({ accountId: currentId, owner: repo.owner, repo: repo.name }),
+        body: JSON.stringify({ accountId: currentId, repoId: repo.id, owner: repo.owner, repo: repo.name }),
       });
       setRepos((items) => items.filter((item) => item.id !== repo.id));
       setHiddenIds((ids) => ids.filter((id) => id !== repo.id));
+      setFavoriteIds((ids) => ids.filter((id) => id !== repo.id));
+      setRecentIds((ids) => ids.filter((id) => id !== repo.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Impossibile eliminare il repository.");
     }
@@ -201,6 +223,7 @@ export function ReposView() {
           </h1>
           <p className="mt-1.5 text-sm text-zinc-500">
             {repos.filter((repo) => !hiddenIds.includes(repo.id)).length} repository visibili · {current?.login}
+            {syncedAt ? <span className="ml-2 text-zinc-600">· sincronizzati {timeAgo(syncedAt)}</span> : null}
           </p>
         </div>
         <Button
@@ -214,6 +237,17 @@ export function ReposView() {
         </Button>
       </header>
 
+      {recentIds.length > 0 ? (
+        <section className="glass p-4">
+          <div className="mb-3 flex items-center gap-2 text-xs font-medium text-zinc-300"><Clock3 className="h-3.5 w-3.5 text-cyan-300" />Riprendi da dove eri</div>
+          <div className="flex flex-wrap gap-2">
+            {recentIds.flatMap((id) => repos.filter((repo) => repo.id === id)).map((repo) => (
+              <Link key={repo.id} href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs text-zinc-300 transition hover:border-cyan-300/20 hover:text-white">{repo.fullName}</Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative min-w-[240px] flex-1">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -224,11 +258,14 @@ export function ReposView() {
           className="!pl-10"
         />
         </div>
-        {hiddenIds.length > 0 ? (
-          <Button variant="ghost" size="sm" onClick={() => setShowHidden((value) => !value)}>
-            {showHidden ? "Nascondi repository nascosti" : `Mostra nascosti (${hiddenIds.length})`}
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-1">
+          {(["all", "favorites", "recent"] as const).map((filter) => (
+            <Button key={filter} variant={repoFilter === filter ? "primary" : "ghost"} size="sm" onClick={() => setRepoFilter(filter)}>
+              {filter === "all" ? "Tutti" : filter === "favorites" ? `Preferiti (${favoriteIds.length})` : "Recenti"}
+            </Button>
+          ))}
+          {hiddenIds.length > 0 ? <Button variant="ghost" size="sm" onClick={() => setShowHidden((value) => !value)}>{showHidden ? "Nascondi nascosti" : `Mostra nascosti (${hiddenIds.length})`}</Button> : null}
+        </div>
       </div>
 
       {error ? <Alert>{error}</Alert> : null}
@@ -254,7 +291,7 @@ export function ReposView() {
             key={repo.id}
             className="glass glass-hover group relative flex min-h-[172px] flex-col justify-between p-4"
           >
-            <Link href={`/repos/${repo.owner}/${repo.name}`} className="block pr-8">
+            <Link href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="block pr-8">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-[11px] text-zinc-600">{repo.owner}</p>
@@ -268,24 +305,25 @@ export function ReposView() {
                 {repo.description || "Nessuna descrizione."}
               </p>
             </Link>
-            <a
-              href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Visita ${repo.fullName} su GitHub`}
-              title="Visita su GitHub"
-              className="absolute bottom-11 right-3 grid h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.08] hover:text-cyan-200"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+            <div className="absolute bottom-11 right-3 flex items-center">
+              <button
+                onClick={() => void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti."))}
+                aria-label={favoriteIds.includes(repo.id) ? `Rimuovi ${repo.name} dai preferiti` : `Aggiungi ${repo.name} ai preferiti`}
+                title={favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
+                className={`grid h-8 w-8 place-items-center rounded-lg transition hover:bg-white/[0.08] ${favoriteIds.includes(repo.id) ? "text-amber-300" : "text-zinc-500 hover:text-amber-200"}`}
+              ><StarIcon className="h-3.5 w-3.5" fill={favoriteIds.includes(repo.id) ? "currentColor" : "none"} /></button>
+              <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" aria-label={`Visita ${repo.fullName} su GitHub`} title="Visita su GitHub" className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.08] hover:text-cyan-200"><ExternalLink className="h-3.5 w-3.5" /></a>
+            </div>
             <details className="absolute right-3 top-3">
               <summary className="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-lg text-zinc-500 hover:bg-white/[0.08] hover:text-white" aria-label={`Azioni per ${repo.name}`}>
                 <MoreHorizontal className="h-4 w-4" />
               </summary>
               <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-white/10 bg-[#111522]/95 p-1.5 shadow-2xl backdrop-blur-xl">
-                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
-                  <ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub
-                </a>
+                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub</a>
+                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/issues`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><CircleDot className="h-3.5 w-3.5" /> Issues</a>
+                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/pulls`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><GitPullRequest className="h-3.5 w-3.5" /> Pull request</a>
+                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/actions`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><RefreshCw className="h-3.5 w-3.5" /> Actions</a>
+                <button onClick={() => void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti."))} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><StarIcon className="h-3.5 w-3.5" /> {favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}</button>
                 <button onClick={() => openEditor(repo)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
                   <Pencil className="h-3.5 w-3.5" /> Modifica proprietà
                 </button>
