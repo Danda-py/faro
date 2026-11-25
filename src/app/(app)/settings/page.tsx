@@ -12,17 +12,11 @@ export default async function SettingsPage() {
     ? await prisma.user.findUnique({
         where: { id: session.userId },
         include: {
-          _count: { select: { accounts: true, messages: true, aiProviders: true } },
+          _count: { select: { accounts: true } },
         },
       })
     : null;
 
-  const pending =
-    session
-      ? await prisma.cleanupSuggestion.count({
-          where: { userId: session.userId, status: "pending" },
-        })
-      : 0;
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 py-2">
@@ -39,7 +33,7 @@ export default async function SettingsPage() {
 
       <section className="glass p-5">
         <h2 className="text-sm font-medium text-zinc-200">Profilo account</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
             <p className="label-base !text-[10px]">Utente</p>
             <p className="truncate text-sm text-zinc-200">@{user?.login ?? "—"}</p>
@@ -48,14 +42,7 @@ export default async function SettingsPage() {
             <p className="label-base !text-[10px]">Account GitHub</p>
             <p className="text-sm text-zinc-200">{user?._count.accounts ?? 0}</p>
           </div>
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
-            <p className="label-base !text-[10px]">Messaggi AI</p>
-            <p className="text-sm text-zinc-200">{user?._count.messages ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
-            <p className="label-base !text-[10px]">Pulizia in attesa</p>
-            <p className="text-sm text-zinc-200">{pending}</p>
-          </div>
+
         </div>
         <div className="mt-4 flex flex-wrap gap-4 text-xs">
           <Link href="/accounts" className="text-violet-300 transition hover:text-violet-200">

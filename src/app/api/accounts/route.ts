@@ -69,6 +69,12 @@ export async function PATCH(req: Request) {
     if (body.profile) {
       const accountWithToken = await resolveAccount(session.userId, account.id);
       if (!accountWithToken) return NextResponse.json({ error: "Account non trovato." }, { status: 404 });
+      if (!account.scope?.split(/[\\s,]+/).includes("user")) {
+        return NextResponse.json(
+          { error: "Questo account non ha autorizzato il permesso GitHub user. Ricollega l'account per modificare il profilo." },
+          { status: 403 },
+        );
+      }
       const profile = body.profile;
       const lengths: Record<string, number> = {
         name: 255,
@@ -80,6 +86,9 @@ export async function PATCH(req: Request) {
       };
       for (const [field, limit] of Object.entries(lengths)) {
         const value = profile[field as keyof typeof profile];
+        if (value !== undefined && typeof value !== "string") {
+          return NextResponse.json({ error: `Il campo ${field} deve essere un testo.` }, { status: 400 });
+        }
         if (value !== undefined && value.length > limit) {
           return NextResponse.json({ error: `${field} supera il limite di ${limit} caratteri.` }, { status: 400 });
         }
