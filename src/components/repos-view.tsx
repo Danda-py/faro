@@ -62,6 +62,7 @@ export function ReposView() {
   const [editDescription, setEditDescription] = useState("");
   const [editPrivate, setEditPrivate] = useState(false);
   const [editArchived, setEditArchived] = useState(false);
+  const [openRepoMenuId, setOpenRepoMenuId] = useState<number | null>(null);
 
   const load = useCallback(
     async (targetPage: number, append: boolean) => {
@@ -98,8 +99,27 @@ export function ReposView() {
     setRepos([]);
     setPage(1);
     setHasMore(false);
+    setOpenRepoMenuId(null);
     if (currentId) void load(1, false);
   }, [currentId, load]);
+
+  useEffect(() => {
+    if (openRepoMenuId === null) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-repo-menu]")) {
+        setOpenRepoMenuId(null);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenRepoMenuId(null);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [openRepoMenuId]);
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -314,28 +334,37 @@ export function ReposView() {
               ><StarIcon className="h-3.5 w-3.5" fill={favoriteIds.includes(repo.id) ? "currentColor" : "none"} /></button>
               <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" aria-label={`Visita ${repo.fullName} su GitHub`} title="Visita su GitHub" className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.08] hover:text-cyan-200"><ExternalLink className="h-3.5 w-3.5" /></a>
             </div>
-            <details className="absolute right-3 top-3">
-              <summary className="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-lg text-zinc-500 hover:bg-white/[0.08] hover:text-white" aria-label={`Azioni per ${repo.name}`}>
+            <div className="absolute right-3 top-3" data-repo-menu>
+              <button
+                type="button"
+                onClick={() => setOpenRepoMenuId((id) => id === repo.id ? null : repo.id)}
+                className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-white/[0.08] hover:text-white"
+                aria-label={`Azioni per ${repo.name}`}
+                aria-expanded={openRepoMenuId === repo.id}
+                aria-haspopup="menu"
+              >
                 <MoreHorizontal className="h-4 w-4" />
-              </summary>
-              <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-white/10 bg-[#111522]/95 p-1.5 shadow-2xl backdrop-blur-xl">
-                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub</a>
-                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/issues`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><CircleDot className="h-3.5 w-3.5" /> Issues</a>
-                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/pulls`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><GitPullRequest className="h-3.5 w-3.5" /> Pull request</a>
-                <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/actions`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><RefreshCw className="h-3.5 w-3.5" /> Actions</a>
-                <button onClick={() => void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti."))} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><StarIcon className="h-3.5 w-3.5" /> {favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}</button>
-                <button onClick={() => openEditor(repo)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
-                  <Pencil className="h-3.5 w-3.5" /> Modifica proprietà
-                </button>
-                <button onClick={() => void toggleHidden(repo)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
-                  {hiddenIds.includes(repo.id) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                  {hiddenIds.includes(repo.id) ? "Mostra in dashboard" : "Nascondi dalla dashboard"}
-                </button>
-                <button onClick={() => void removeRepo(repo)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/10">
-                  <Trash2 className="h-3.5 w-3.5" /> Elimina da GitHub…
-                </button>
-              </div>
-            </details>
+              </button>
+              {openRepoMenuId === repo.id ? (
+                <div role="menu" className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-white/10 bg-[#111522]/95 p-1.5 shadow-2xl backdrop-blur-xl">
+                  <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub</a>
+                  <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/issues`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><CircleDot className="h-3.5 w-3.5" /> Issues</a>
+                  <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/pulls`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><GitPullRequest className="h-3.5 w-3.5" /> Pull request</a>
+                  <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/actions`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><RefreshCw className="h-3.5 w-3.5" /> Actions</a>
+                  <button onClick={() => { setOpenRepoMenuId(null); void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti.")); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><StarIcon className="h-3.5 w-3.5" /> {favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}</button>
+                  <button onClick={() => { setOpenRepoMenuId(null); openEditor(repo); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
+                    <Pencil className="h-3.5 w-3.5" /> Modifica proprietà
+                  </button>
+                  <button onClick={() => { setOpenRepoMenuId(null); void toggleHidden(repo); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
+                    {hiddenIds.includes(repo.id) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {hiddenIds.includes(repo.id) ? "Mostra in dashboard" : "Nascondi dalla dashboard"}
+                  </button>
+                  <button onClick={() => { setOpenRepoMenuId(null); void removeRepo(repo); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/10">
+                    <Trash2 className="h-3.5 w-3.5" /> Elimina da GitHub…
+                  </button>
+                </div>
+              ) : null}
+            </div>
             <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-600">
               <div className="flex items-center gap-3">
                 {repo.language ? <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />{repo.language}</span> : null}
