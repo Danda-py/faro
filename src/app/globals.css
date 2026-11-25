@@ -31,7 +31,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid rgb(var(--accent) / 0.55);
+    outline: 1px solid rgb(var(--accent) / 0.4);
     outline-offset: 2px;
   }
 
@@ -74,16 +74,16 @@
 @layer components {
   .glass {
     @apply relative rounded-2xl border backdrop-blur-2xl;
-    border-color: rgb(var(--line) / 0.11);
+    border-color: rgb(var(--line) / 0.075);
     background:
       linear-gradient(
         158deg,
-        rgba(255, 255, 255, 0.065) 0%,
-        rgba(255, 255, 255, 0.024) 42%,
-        rgba(255, 255, 255, 0.012) 100%
+        rgba(255, 255, 255, 0.055) 0%,
+        rgba(255, 255, 255, 0.02) 42%,
+        rgba(255, 255, 255, 0.01) 100%
       );
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.07) inset,
+      0 1px 0 rgba(255, 255, 255, 0.045) inset,
       0 1px 1px rgba(0, 0, 0, 0.28),
       0 28px 70px -46px rgba(0, 0, 0, 0.95);
   }
@@ -97,18 +97,18 @@
   }
 
   .glass-hover:hover {
-    border-color: rgba(165, 180, 252, 0.24);
+    border-color: rgba(165, 180, 252, 0.2);
     background:
       linear-gradient(
         158deg,
-        rgba(255, 255, 255, 0.085) 0%,
-        rgba(255, 255, 255, 0.032) 42%,
-        rgba(139, 92, 246, 0.035) 100%
+        rgba(255, 255, 255, 0.075) 0%,
+        rgba(255, 255, 255, 0.028) 42%,
+        rgba(139, 92, 246, 0.03) 100%
       );
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.1) inset,
+      0 1px 0 rgba(255, 255, 255, 0.07) inset,
       0 26px 60px -38px rgba(0, 0, 0, 0.9),
-      0 0 50px -28px rgba(99, 102, 241, 0.5);
+      0 0 50px -28px rgba(99, 102, 241, 0.42);
     transform: translateY(-2px);
   }
 

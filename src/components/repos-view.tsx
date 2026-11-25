@@ -352,9 +352,11 @@ export function ReposView() {
         {filtered.map((repo) => (
           <article
             key={repo.id}
-            className="glass glass-hover group relative flex min-h-[184px] flex-col overflow-hidden p-4"
+            className={cn(
+              "glass glass-hover group relative flex min-h-[184px] flex-col p-4",
+              openRepoMenuId === repo.id && "z-30",
+            )}
           >
-            <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             <Link href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="block pr-9">
               <div className="flex items-center gap-2 text-[10.5px] font-medium uppercase tracking-[0.14em] text-zinc-600">
                 <span className="truncate">{repo.owner}</span>
@@ -377,7 +379,12 @@ export function ReposView() {
               <button
                 type="button"
                 onClick={() => setOpenRepoMenuId((id) => id === repo.id ? null : repo.id)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-white/[0.08] hover:text-white"
+                className={cn(
+                  "grid h-8 w-8 place-items-center rounded-lg transition",
+                  openRepoMenuId === repo.id
+                    ? "bg-white/[0.08] text-white"
+                    : "text-zinc-500 hover:bg-white/[0.08] hover:text-white",
+                )}
                 aria-label={`Azioni per ${repo.name}`}
                 aria-expanded={openRepoMenuId === repo.id}
                 aria-haspopup="menu"
@@ -385,7 +392,7 @@ export function ReposView() {
                 <MoreHorizontal className="h-4 w-4" />
               </button>
               {openRepoMenuId === repo.id ? (
-                <div role="menu" className="absolute right-0 z-20 mt-1.5 w-48 overflow-hidden rounded-xl border border-white/[0.12] bg-[#0b0e18]/95 p-1.5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+                <div role="menu" className="absolute right-0 z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-white/[0.08] bg-[#0a0c15] p-1.5 shadow-[0_28px_70px_-20px_rgba(0,0,0,1),0_0_0_1px_rgba(0,0,0,0.4)]">
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub</a>
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/issues`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><CircleDot className="h-3.5 w-3.5" /> Issues</a>
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/pulls`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><GitPullRequest className="h-3.5 w-3.5" /> Pull request</a>
