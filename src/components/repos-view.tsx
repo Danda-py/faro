@@ -385,7 +385,7 @@ export function ReposView() {
                 <MoreHorizontal className="h-4 w-4" />
               </button>
               {openRepoMenuId === repo.id ? (
-                <div role="menu" className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-white/10 bg-[#111522]/95 p-1.5 shadow-2xl backdrop-blur-xl">
+                <div role="menu" className="absolute right-0 z-20 mt-1.5 w-48 overflow-hidden rounded-xl border border-white/[0.12] bg-[#0b0e18]/95 p-1.5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.95)] backdrop-blur-xl">
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><ExternalLink className="h-3.5 w-3.5" /> Visita su GitHub</a>
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/issues`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><CircleDot className="h-3.5 w-3.5" /> Issues</a>
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/pulls`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><GitPullRequest className="h-3.5 w-3.5" /> Pull request</a>

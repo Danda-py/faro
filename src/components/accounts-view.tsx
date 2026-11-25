@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Github, Link2, Plus, Star, Trash2 } from "lucide-react";
 import { useAccount, type Account } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
-import { Alert, Button, Input } from "@/components/ui";
+import { Alert, Button, Input, PageHeader } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 export function AccountsView() {
@@ -65,20 +65,18 @@ export function AccountsView() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 py-2">
-      <header className="animate-fade-up">
-        <h1 className="text-2xl font-semibold tracking-tight">Account collegati</h1>
-        <p className="mt-1.5 text-sm text-zinc-500">
-          Aggiungi più account GitHub — personale, scuola o lavoro — e passa da uno all&apos;altro
-          senza rifare il login.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Identità"
+        title="Account collegati"
+        description="Aggiungi più account GitHub — personale, scuola o lavoro — e passa da uno all'altro senza rifare il login."
+      />
 
       <a
         href="/api/auth/github/start?mode=link&next=/accounts"
         className="glass glass-hover flex items-center justify-between gap-4 p-4"
       >
         <span className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-violet-300">
+          <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-indigo-500/20 to-cyan-400/10 text-indigo-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <Plus className="h-4 w-4" />
           </span>
           <span>
@@ -105,7 +103,7 @@ export function AccountsView() {
               key={account.id}
               className={cn(
                 "glass p-4 transition",
-                isCurrent && "border-violet-400/30 shadow-[0_0_50px_-24px_rgba(139,92,246,0.8)]",
+                isCurrent && "border-violet-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_50px_-24px_rgba(139,92,246,0.8)]",
               )}
             >
               <div className="flex flex-wrap items-start gap-3">

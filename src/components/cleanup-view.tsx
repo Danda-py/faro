@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { apiFetch } from "@/lib/client-api";
-import { Alert, Button } from "@/components/ui";
+import { Alert, Button, PageHeader } from "@/components/ui";
 import { cn, formatBytes } from "@/lib/utils";
 
 type Suggestion = {
@@ -137,28 +137,23 @@ export function CleanupView() {
 
   return (
     <div className="space-y-5 py-2">
-      <header className="animate-fade-up flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-zinc-600">Manutenzione</p>
-          <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Eraser className="h-5 w-5 text-cyan-300" />
-            Pulizia repository
-          </h1>
-          <p className="mt-1.5 max-w-xl text-sm text-zinc-500">
-            L&apos;AI propone backup, duplicati e file inutilizzati. Nulla viene eliminato
-            senza la tua conferma.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => void load()} loading={loading}>
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
-          <Button size="sm" onClick={() => void runScan()} loading={scanning}>
-            <Eraser className="h-3.5 w-3.5" />
-            Scansiona ora
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Manutenzione"
+        title="Pulizia repository"
+        icon={<Eraser className="h-4 w-4" />}
+        description="L'AI propone backup, duplicati e file inutilizzati. Nulla viene eliminato senza la tua conferma."
+        actions={
+          <>
+            <Button variant="ghost" size="sm" onClick={() => void load()} loading={loading} aria-label="Aggiorna proposte">
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+            <Button size="sm" onClick={() => void runScan()} loading={scanning}>
+              <Eraser className="h-3.5 w-3.5" />
+              Scansiona ora
+            </Button>
+          </>
+        }
+      />
 
       <div className="glass flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 text-[12px] text-zinc-500">
         <span className="flex items-center gap-1.5">

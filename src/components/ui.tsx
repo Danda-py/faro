@@ -13,7 +13,7 @@ const variants: Record<Variant, string> = {
   ghost:
     "border border-white/10 bg-white/[0.045] text-zinc-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-white/20 hover:bg-white/[0.075] hover:text-white active:translate-y-px",
   danger:
-    "border border-rose-400/20 bg-rose-500/10 text-rose-200 hover:border-rose-400/35 hover:bg-rose-500/18 hover:text-rose-100 active:translate-y-px",
+    "border border-rose-400/20 bg-rose-500/10 text-rose-200 hover:border-rose-400/35 hover:bg-rose-500/20 hover:text-rose-100 active:translate-y-px",
   subtle: "border border-transparent text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100",
 };
 

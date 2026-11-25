@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useAccount } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
-import { Alert, Button, Input } from "@/components/ui";
+import { Alert, Button, Input, PageHeader } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 type Item = { id: string; role: string; content: string; createdAt: string };
@@ -110,24 +110,21 @@ export function AiChat() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-5rem)] max-w-4xl flex-col py-2">
-      <header className="animate-fade-up flex flex-wrap items-center justify-between gap-3 pb-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Sparkles className="h-5 w-5 text-violet-300" />
-            Assistente AI
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            L'assistente AI, con il contesto dei tuoi repository
-            {current ? ` · account ${current.label || current.login}` : ""}.
-          </p>
-        </div>
-        {messages.length > 0 ? (
-          <Button variant="ghost" size="sm" onClick={() => void clearHistory()}>
-            <Trash2 className="h-3.5 w-3.5" />
-            Nuova chat
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        className="pb-4"
+        eyebrow="Assistente"
+        title="Assistente AI"
+        icon={<Sparkles className="h-4 w-4" />}
+        description={`L'assistente AI, con il contesto dei tuoi repository${current ? ` · account ${current.label || current.login}` : ""}.`}
+        actions={
+          messages.length > 0 ? (
+            <Button variant="ghost" size="sm" onClick={() => void clearHistory()}>
+              <Trash2 className="h-3.5 w-3.5" />
+              Nuova chat
+            </Button>
+          ) : null
+        }
+      />
 
       <div className="glass flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">

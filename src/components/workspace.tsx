@@ -458,16 +458,17 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/dashboard"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white"
+            aria-label="Torna alla dashboard"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-[11px] text-zinc-600">
+            <p className="flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-[0.16em] text-zinc-600">
               {owner}
               {treeData?.repo.private ? <Lock className="h-3 w-3" /> : null}
             </p>
-            <h1 className="truncate text-lg font-semibold tracking-tight">
+            <h1 className="mt-0.5 truncate text-[19px] font-semibold tracking-[-0.02em] text-zinc-50">
               {treeData?.repo.name ?? repo}
             </h1>
           </div>
