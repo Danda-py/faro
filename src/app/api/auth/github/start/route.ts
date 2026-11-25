@@ -37,6 +37,11 @@ export async function GET(req: Request) {
   authorize.searchParams.set("redirect_uri", redirectUri);
   authorize.searchParams.set("scope", "repo read:user user:email user");
   authorize.searchParams.set("state", state);
+  if (mode === "link") {
+    // GitHub riusa la sessione del browser: senza prompt=select_account chi
+    // aggiunge un secondo account verrebbe riportato sullo stesso profilo.
+    authorize.searchParams.set("prompt", "select_account");
+  }
 
   const res = NextResponse.redirect(authorize.toString());
   res.cookies.set("oauth_state", payload, {

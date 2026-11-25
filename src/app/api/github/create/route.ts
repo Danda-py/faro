@@ -57,6 +57,18 @@ function segment(value: unknown, label: string) {
   return value.trim();
 }
 
+/** I branch possono contenere "/" (es. feature/esercizi), a differenza di owner e repo. */
+function branchName(value: unknown) {
+  if (typeof value !== "string" || !value.trim() || value.length > 250) {
+    throw new GithubError(400, "Branch non valido.");
+  }
+  const name = value.trim();
+  if (name.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new GithubError(400, "Branch non valido.");
+  }
+  return name;
+}
+
 async function mapLimit<T, R>(
   items: T[],
   limit: number,
@@ -154,7 +166,7 @@ export async function POST(req: Request) {
     }
 
     if (body.action === "commit") {
-      const branch = segment(body.branch, "Branch");
+      const branch = branchName(body.branch);
       const files = body.files ?? [];
       if (!Array.isArray(files) || files.length === 0) {
         return NextResponse.json({ error: "Nessun file da includere nel commit." }, { status: 400 });

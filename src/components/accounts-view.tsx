@@ -21,6 +21,32 @@ export function AccountsView() {
     return () => clearTimeout(timer);
   }, [notice]);
 
+  // Dopo il ritorno da GitHub: conferma l'esito e attiva il nuovo account.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const linked = params.get("linked");
+    if (!linked) return;
+    const login = params.get("login");
+    if (linked === "ok" && login) {
+      const linkedAccount = accounts.find((account) => account.login === login);
+      if (linkedAccount) setCurrentId(linkedAccount.id);
+      setNotice(`Account @${login} collegato e attivo.`);
+    } else if (login) {
+      setNotice(
+        `@${login} era già collegato: per aggiungere un altro account scegli un profilo diverso nella finestra di GitHub.`,
+      );
+    }
+    params.delete("linked");
+    params.delete("login");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}`,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function patch(id: string, payload: { label?: string | null; isDefault?: boolean }) {
     setBusyId(id);
     setError("");
@@ -84,7 +110,7 @@ export function AccountsView() {
               Collega un altro account
             </span>
             <span className="block text-[12px] text-zinc-500">
-              Ti reindirizziamo su GitHub per autorizzare l&apos;accesso.
+              GitHub ti chiederà quale account usare: scegli quello da aggiungere.
             </span>
           </span>
         </span>

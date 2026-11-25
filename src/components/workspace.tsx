@@ -12,6 +12,7 @@ import {
   FilePlus2,
   Folder,
   FolderPlus,
+  FolderUp,
   Loader2,
   Lock,
   MoreHorizontal,
@@ -28,6 +29,7 @@ import {
 import { useAccount } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
 import { Alert, Button, Input } from "@/components/ui";
+import { PushProjectDialog } from "@/components/push-project-dialog";
 import { cn, fileExtension, formatBytes } from "@/lib/utils";
 
 type TreeEntry = { path: string; size: number; sha: string };
@@ -133,6 +135,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   const [notice, setNotice] = useState("");
 
   const [showNew, setShowNew] = useState(false);
+  const [pushOpen, setPushOpen] = useState(false);
   const [folderAction, setFolderAction] = useState<{ path: string; action: "move" | "delete" } | null>(null);
   const [folderDestination, setFolderDestination] = useState("");
   const [folderSaving, setFolderSaving] = useState(false);
@@ -510,6 +513,16 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           >
             <Download className="h-3.5 w-3.5" />
             ZIP
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setPushOpen(true)}
+            disabled={!branch}
+            title="Carica una cartella dal computer e crea un commit sul branch"
+          >
+            <FolderUp className="h-3.5 w-3.5" />
+            Progetto
           </Button>
           <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
             <Upload className="h-3.5 w-3.5" />
@@ -896,6 +909,23 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           </div>
         </section>
       </div>
+
+      <PushProjectDialog
+        open={pushOpen}
+        onClose={() => setPushOpen(false)}
+        owner={owner}
+        repo={repo}
+        branch={branch}
+        onPushed={(result) => {
+          setPushOpen(false);
+          void loadTree(branch);
+          setNotice(
+            result.commit
+              ? `Push completato: ${result.files} file nel commit ${result.commit.slice(0, 7)}.`
+              : `Push completato: ${result.files} file.`,
+          );
+        }}
+      />
     </div>
   );
 }

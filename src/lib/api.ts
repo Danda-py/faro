@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { GithubError } from "@/lib/github";
+import { AccountTokenError } from "@/lib/accounts";
 import { AiError } from "@/lib/ai";
 
 export function unauthorized() {
@@ -11,9 +12,25 @@ export function badRequest(message: string) {
 }
 
 export function handleError(error: unknown) {
+  if (error instanceof AccountTokenError) {
+    return NextResponse.json({ error: error.message, reauthorize: true }, { status: 401 });
+  }
   if (error instanceof GithubError) {
-    const status = error.status === 401 || error.status === 403 ? error.status : 400;
-    return NextResponse.json({ error: error.message }, { status });
+    const status =
+      error.status === 401 || error.status === 403 || error.status === 404 || error.status === 429
+        ? error.status
+        : error.status >= 400 && error.status < 500
+          ? 400
+          : 502;
+    return NextResponse.json(
+      {
+        error: error.message,
+        // Il client usa questo flag per mostrare "Ricollega account".
+        ...(error.status === 401 || error.status === 403 ? { reauthorize: true } : {}),
+        ...(error.status === 429 ? { retryAfter: error.retryAfterSeconds ?? null } : {}),
+      },
+      { status },
+    );
   }
   if (error instanceof AiError) {
     const status = error.status >= 500 ? 503 : error.status;

@@ -1,42 +1,142 @@
 const API = "https://api.github.com";
+const MAX_ATTEMPTS = 3;
 
 export class GithubError extends Error {
   constructor(
     public status: number,
     message: string,
+    public detail?: string,
+    public retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "GithubError";
   }
 }
 
-async function gh<T>(token: string, path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "portale",
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
-  });
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-  if (!res.ok) {
-    let message = res.statusText || `Errore GitHub (${res.status})`;
-    try {
-      const body = (await res.json()) as { message?: string };
-      if (body?.message) message = body.message;
-    } catch {
-      /* corpo non JSON */
-    }
-    throw new GithubError(res.status, message);
+function retryAfterSeconds(res: Response): number | undefined {
+  const header = res.headers.get("retry-after");
+  if (header) {
+    const seconds = Number(header);
+    if (Number.isFinite(seconds)) return Math.max(0, seconds);
+    const date = Date.parse(header);
+    if (Number.isFinite(date)) return Math.max(0, Math.ceil((date - Date.now()) / 1000));
+  }
+  const reset = Number(res.headers.get("x-ratelimit-reset"));
+  if (res.headers.get("x-ratelimit-remaining") === "0" && Number.isFinite(reset)) {
+    return Math.max(0, Math.ceil(reset - Date.now() / 1000));
+  }
+  return undefined;
+}
+
+/**
+ * Traduce una risposta di errore GitHub in un messaggio utile all'utente:
+ * distingue token non valido, permessi mancanti, limiti di richieste e
+ * disservizi, così l'interfaccia sa se conviene attendere o ricollegare.
+ */
+async function githubError(res: Response): Promise<GithubError> {
+  let raw = res.statusText || `Errore GitHub (${res.status})`;
+  try {
+    const body = (await res.json()) as { message?: string };
+    if (body?.message) raw = body.message;
+  } catch {
+    /* corpo non JSON */
   }
 
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  if (res.status === 429 || /rate limit|abuse|secondary/i.test(raw)) {
+    const wait = retryAfterSeconds(res);
+    const when =
+      wait === undefined
+        ? "tra qualche secondo"
+        : wait > 90
+          ? `tra circa ${Math.ceil(wait / 60)} minuti`
+          : `tra ${Math.max(1, Math.round(wait))} secondi`;
+    return new GithubError(
+      429,
+      `GitHub ha temporaneamente bloccato le richieste: riprova ${when}.`,
+      raw,
+      wait,
+    );
+  }
+  if (res.status === 401) {
+    return new GithubError(
+      401,
+      "GitHub ha rifiutato il token di questo account: ricollegalo per continuare.",
+      raw,
+    );
+  }
+  if (res.status === 403) {
+    return new GithubError(
+      403,
+      "GitHub ha negato l'accesso: manca il permesso repo oppure l'organizzazione richiede l'SSO. Ricollega l'account.",
+      raw,
+    );
+  }
+  if (res.status === 404) {
+    return new GithubError(
+      404,
+      "Risorsa non trovata su GitHub: potrebbe essere stata rinominata, eliminata o non essere visibile a questo account.",
+      raw,
+    );
+  }
+  if (res.status >= 500) {
+    return new GithubError(502, "GitHub non risponde in questo momento: riprova tra poco.", raw);
+  }
+  return new GithubError(res.status, raw, raw);
+}
+
+function isRetryable(error: GithubError) {
+  if (error.status === 429) return (error.retryAfterSeconds ?? 0) <= 5;
+  return error.status === 502;
+}
+
+async function gh<T>(token: string, path: string, init: RequestInit = {}): Promise<T> {
+  for (let attempt = 0; ; attempt += 1) {
+    let res: Response;
+    try {
+      res = await fetch(`${API}${path}`, {
+        ...init,
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": "portale",
+          ...(init.body ? { "Content-Type": "application/json" } : {}),
+          ...init.headers,
+        },
+      });
+    } catch {
+      // Errori di rete: un paio di tentativi coprono i cali momentanei.
+      if (attempt < MAX_ATTEMPTS - 1) {
+        await sleep(400 * 2 ** attempt);
+        continue;
+      }
+      throw new GithubError(
+        502,
+        "Impossibile raggiungere GitHub: controlla la connessione e riprova.",
+      );
+    }
+
+    if (res.ok) {
+      if (res.status === 204) return undefined as T;
+      return (await res.json()) as T;
+    }
+
+    const error = await githubError(res);
+    if (attempt < MAX_ATTEMPTS - 1 && isRetryable(error)) {
+      const delay = Math.min(
+        5000,
+        Math.round((error.retryAfterSeconds ?? 0.4 * 2 ** attempt) * 1000),
+      );
+      await sleep(delay);
+      continue;
+    }
+    throw error;
+  }
 }
 
 export type GithubUser = {
@@ -193,7 +293,19 @@ export async function importFiles(
   if (unique.size !== treeItems.length) throw new GithubError(400, "Ci sono percorsi duplicati tra i file.");
 
   const branchPath = encodeRefPath(input.branch);
-  const ref = await gh<GithubRef>(token, `/repos/${owner}/${repo}/git/ref/heads/${branchPath}`);
+  let ref: GithubRef;
+  try {
+    ref = await gh<GithubRef>(token, `/repos/${owner}/${repo}/git/ref/heads/${branchPath}`);
+  } catch (error) {
+    if (error instanceof GithubError && error.status === 404) {
+      throw new GithubError(
+        409,
+        `Il branch "${input.branch}" non esiste ancora o il repository è vuoto: crea un commit iniziale (ad esempio un README) e riprova.`,
+        error.detail,
+      );
+    }
+    throw error;
+  }
   const parent = await gh<GithubCommit>(token, `/repos/${owner}/${repo}/git/commits/${ref.object.sha}`);
   const tree = await gh<{ sha: string }>(token, `/repos/${owner}/${repo}/git/trees`, {
     method: "POST",
@@ -235,16 +347,7 @@ export async function downloadArchive(
       "User-Agent": "portale",
     },
   });
-  if (!res.ok) {
-    let message = res.statusText || `Errore GitHub (${res.status})`;
-    try {
-      const body = (await res.json()) as { message?: string };
-      if (body?.message) message = body.message;
-    } catch {
-      /* corpo non JSON */
-    }
-    throw new GithubError(res.status, message);
-  }
+  if (!res.ok) throw await githubError(res);
   return res;
 }
 

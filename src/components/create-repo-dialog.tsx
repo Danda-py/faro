@@ -13,6 +13,13 @@ import { useAccount } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
 import { Alert, Button, Input } from "@/components/ui";
 import { cn, formatBytes } from "@/lib/utils";
+import {
+  collectEntry,
+  commonRootPrefix,
+  skipPath,
+  toBase64,
+  type PickedFile,
+} from "@/lib/local-files";
 
 export type CreatedRepo = {
   owner: string;
@@ -20,8 +27,6 @@ export type CreatedRepo = {
   fullName: string;
   defaultBranch: string;
 };
-
-type PickedFile = { path: string; file: File };
 
 const MAX_FILES = 1500;
 const MAX_FILE_BYTES = 2_500_000;
@@ -36,67 +41,6 @@ function repoNameFromFolder(value: string) {
     .replace(/[^a-z0-9._-]+/g, "-")
     .replace(/^[-.]+|[-.]+$/g, "")
     .slice(0, 100);
-}
-
-function skipPath(path: string) {
-  const parts = path.split("/");
-  return path.endsWith("/.DS_Store") || path === ".DS_Store" || parts.includes(".git");
-}
-
-function toBase64(buffer: ArrayBuffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  const chunk = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
-  }
-  return btoa(binary);
-}
-
-function readDirectory(reader: FileSystemDirectoryReader) {
-  return new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject));
-}
-
-async function readAllEntries(reader: FileSystemDirectoryReader) {
-  const all: FileSystemEntry[] = [];
-  for (;;) {
-    const batch = await readDirectory(reader);
-    if (batch.length === 0) break;
-    all.push(...batch);
-  }
-  return all;
-}
-
-async function collectEntry(
-  entry: FileSystemEntry,
-  prefix: string,
-  collected: PickedFile[],
-  skipped: { count: number },
-) {
-  if (skipPath(`${prefix}${entry.name}`)) {
-    skipped.count += 1;
-    return;
-  }
-  if (entry.isFile) {
-    const file = await new Promise<File>((resolve, reject) =>
-      (entry as FileSystemFileEntry).file(resolve, reject),
-    );
-    collected.push({ path: `${prefix}${entry.name}`, file });
-    return;
-  }
-  if (!entry.isDirectory) return;
-  const directory = entry as FileSystemDirectoryEntry;
-  const children = await readAllEntries(directory.createReader());
-  if (children.length === 0) {
-    collected.push({
-      path: `${prefix}${entry.name}/.gitkeep`,
-      file: new File(["\n"], ".gitkeep"),
-    });
-    return;
-  }
-  for (const child of children) {
-    await collectEntry(child, `${prefix}${entry.name}/`, collected, skipped);
-  }
 }
 
 export function CreateRepoDialog({
@@ -159,12 +103,7 @@ export function CreateRepoDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [busy, onClose, open]);
 
-  const rootPrefix = useMemo(() => {
-    if (files.length === 0) return "";
-    if (!files.every((item) => item.path.includes("/"))) return "";
-    const tops = new Set(files.map((item) => item.path.split("/")[0]));
-    return tops.size === 1 ? [...tops][0] : "";
-  }, [files]);
+  const rootPrefix = useMemo(() => commonRootPrefix(files), [files]);
 
   useEffect(() => {
     if (nameTouched || !rootPrefix) return;

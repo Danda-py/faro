@@ -70,11 +70,17 @@ export async function GET(req: Request) {
       ref || repoInfo.default_branch,
     );
 
-    await prisma.githubRepoPreference.upsert({
-      where: { accountId_repoId: { accountId: account.id, repoId: repoInfo.id } },
-      create: { accountId: account.id, repoId: repoInfo.id, owner: repoInfo.owner.login, repo: repoInfo.name, hidden: false, lastOpenedAt: new Date() },
-      update: { owner: repoInfo.owner.login, repo: repoInfo.name, lastOpenedAt: new Date() },
-    });
+    // "Repository aperto di recente" è un extra: se il database non risponde
+    // non deve impedire l'apertura del repository.
+    try {
+      await prisma.githubRepoPreference.upsert({
+        where: { accountId_repoId: { accountId: account.id, repoId: repoInfo.id } },
+        create: { accountId: account.id, repoId: repoInfo.id, owner: repoInfo.owner.login, repo: repoInfo.name, hidden: false, lastOpenedAt: new Date() },
+        update: { owner: repoInfo.owner.login, repo: repoInfo.name, lastOpenedAt: new Date() },
+      });
+    } catch (error) {
+      console.error("[github/tree] preferenze non disponibili", error);
+    }
 
     const blobs = tree.tree
       .filter((entry) => entry.type === "blob")

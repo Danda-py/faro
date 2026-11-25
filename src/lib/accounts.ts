@@ -8,6 +8,18 @@ export type ResolvedAccount = {
   token: string;
 };
 
+/** Il token salvato non è decifrabile (di solito AUTH_SECRET cambiato). */
+export class AccountTokenError extends Error {
+  readonly reauthorize = true;
+
+  constructor(public login: string) {
+    super(
+      `Non riesco a leggere il token salvato per @${login}: il segreto del server (AUTH_SECRET) potrebbe essere cambiato. Ricollega l'account.`,
+    );
+    this.name = "AccountTokenError";
+  }
+}
+
 /**
  * Restituisce l'account GitHub richiesto (o quello predefinito) appartenente
  * all'utente loggato, con il token già decifrato.
@@ -27,11 +39,18 @@ export async function resolveAccount(
 
   if (!account) return null;
 
+  let token: string;
+  try {
+    token = decryptToken(account.tokenCipher);
+  } catch {
+    throw new AccountTokenError(account.login);
+  }
+
   return {
     id: account.id,
     login: account.login,
     label: account.label,
-    token: decryptToken(account.tokenCipher),
+    token,
   };
 }
 

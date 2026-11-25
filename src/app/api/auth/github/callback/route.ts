@@ -93,9 +93,17 @@ export async function GET(req: Request) {
   };
 
   let userId = parsed.mode === "link" ? parsed.userId ?? null : null;
+  // Per il flusso "collega un altro account" comunichiamo all'interfaccia se
+  // l'account era nuovo oppure già presente (GitHub ha riusato la sessione).
+  let linkStatus: "ok" | "same" | null = null;
 
   try {
     if (userId) {
+      const existing = await prisma.githubAccount.findUnique({
+        where: { userId_githubId: { userId, githubId } },
+        select: { id: true },
+      });
+      linkStatus = existing ? "same" : "ok";
       await prisma.githubAccount.upsert({
         where: { userId_githubId: { userId, githubId } },
         create: { userId, ...accountData },
@@ -176,8 +184,12 @@ export async function GET(req: Request) {
   if (!userId) return fail("unknown_user");
 
   const token = await signSession(userId);
-  const target = parsed.next.startsWith("/") ? parsed.next : "/dashboard";
-  const res = NextResponse.redirect(new URL(target, origin));
+  const target = new URL(parsed.next.startsWith("/") ? parsed.next : "/dashboard", origin);
+  if (parsed.mode === "link" && linkStatus) {
+    target.searchParams.set("linked", linkStatus);
+    target.searchParams.set("login", accountData.login);
+  }
+  const res = NextResponse.redirect(target);
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
   res.cookies.delete("oauth_state");
   return res;

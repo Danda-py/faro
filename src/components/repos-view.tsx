@@ -26,7 +26,7 @@ import {
   Star as StarIcon,
 } from "lucide-react";
 import { useAccount } from "@/components/account-provider";
-import { apiFetch } from "@/lib/client-api";
+import { ApiError, apiFetch } from "@/lib/client-api";
 import { Alert, Button, Input, PageHeader } from "@/components/ui";
 import { CreateRepoDialog } from "@/components/create-repo-dialog";
 import { cn, timeAgo } from "@/lib/utils";
@@ -54,6 +54,7 @@ export function ReposView() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [needsReauth, setNeedsReauth] = useState(false);
   const [query, setQuery] = useState("");
   const [hiddenIds, setHiddenIds] = useState<number[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
@@ -75,6 +76,7 @@ export function ReposView() {
       if (!currentId) return;
       setLoading(true);
       setError("");
+      setNeedsReauth(false);
       try {
         const params = new URLSearchParams({
           accountId: currentId,
@@ -94,6 +96,10 @@ export function ReposView() {
         setPage(targetPage);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Caricamento fallito.");
+        setNeedsReauth(
+          err instanceof ApiError &&
+            (err.details as { reauthorize?: boolean } | undefined)?.reauthorize === true,
+        );
       } finally {
         setLoading(false);
       }
@@ -338,7 +344,22 @@ export function ReposView() {
         </div>
       </div>
 
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? (
+        <Alert>
+          {error}
+          {needsReauth && current ? (
+            <>
+              {" "}
+              <a
+                href={`/api/auth/github/start?mode=link&next=${encodeURIComponent("/dashboard")}`}
+                className="font-medium text-violet-200 underline decoration-violet-300/40 underline-offset-2 hover:text-violet-100"
+              >
+                Ricollega @{current.login}
+              </a>
+            </>
+          ) : null}
+        </Alert>
+      ) : null}
 
       {loading && repos.length === 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

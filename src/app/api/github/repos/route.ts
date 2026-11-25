@@ -18,15 +18,36 @@ export async function GET(req: Request) {
 
     const page = Math.max(1, Number(params.get("page") ?? "1") || 1);
     const repos = await listRepos(account.token, page);
-    const preferences = await prisma.githubRepoPreference.findMany({
-      where: { accountId: account.id },
-      select: { repoId: true, hidden: true, favorite: true, lastOpenedAt: true },
-    });
-    const updatedAccount = await prisma.githubAccount.update({
-      where: { id: account.id },
-      data: { reposSyncedAt: new Date() },
-      select: { reposSyncedAt: true },
-    });
+
+    // Le preferenze e la data di sincronizzazione sono un di più: se il
+    // database è lento o lo schema non è aggiornato, l'elenco dei repository
+    // deve comunque arrivare all'utente.
+    let preferences: Array<{
+      repoId: number;
+      hidden: boolean;
+      favorite: boolean;
+      lastOpenedAt: Date | null;
+    }> = [];
+    try {
+      preferences = await prisma.githubRepoPreference.findMany({
+        where: { accountId: account.id },
+        select: { repoId: true, hidden: true, favorite: true, lastOpenedAt: true },
+      });
+    } catch (error) {
+      console.error("[github/repos] preferenze non disponibili", error);
+    }
+
+    let syncedAt: Date | null = null;
+    try {
+      const updatedAccount = await prisma.githubAccount.update({
+        where: { id: account.id },
+        data: { reposSyncedAt: new Date() },
+        select: { reposSyncedAt: true },
+      });
+      syncedAt = updatedAccount.reposSyncedAt;
+    } catch (error) {
+      console.error("[github/repos] impossibile aggiornare reposSyncedAt", error);
+    }
 
     return NextResponse.json({
       account: { id: account.id, login: account.login },
@@ -36,7 +57,7 @@ export async function GET(req: Request) {
         .filter((item) => item.lastOpenedAt)
         .sort((a, b) => b.lastOpenedAt!.getTime() - a.lastOpenedAt!.getTime())
         .map((item) => item.repoId),
-      syncedAt: updatedAccount.reposSyncedAt,
+      syncedAt,
       page,
       hasMore: repos.length === 100,
       repos: repos.map((repo) => ({

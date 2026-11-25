@@ -2,6 +2,8 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** Corpo JSON della risposta, ad esempio { reauthorize: true }. */
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -24,7 +26,7 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     const message =
       (data as { error?: string })?.error || `Richiesta fallita (${res.status})`;
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, data as Record<string, unknown>);
   }
 
   return data as T;
