@@ -341,6 +341,13 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
     window.open(`/api/github/download?${params.toString()}`, "_blank");
   }
 
+  function downloadRepository() {
+    if (!currentId) return;
+    const params = new URLSearchParams({ accountId: currentId, owner, repo });
+    if (branch) params.set("ref", branch);
+    window.open(`/api/github/download?${params.toString()}`, "_blank");
+  }
+
   async function runFix() {
     if (!file || !currentId) return;
     setFixing(true);
@@ -494,6 +501,15 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           </select>
           <Button variant="ghost" size="sm" onClick={() => void loadTree(branch)} loading={treeLoading}>
             <RefreshCw className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={downloadRepository}
+            title="Scarica l'intero repository come ZIP"
+          >
+            <Download className="h-3.5 w-3.5" />
+            ZIP
           </Button>
           <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
             <Upload className="h-3.5 w-3.5" />

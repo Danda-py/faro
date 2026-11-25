@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -12,6 +14,7 @@ import {
   Lock,
   MoreHorizontal,
   Pencil,
+  Plus,
   RefreshCw,
   Search,
   Star,
@@ -25,6 +28,7 @@ import {
 import { useAccount } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
 import { Alert, Button, Input, PageHeader } from "@/components/ui";
+import { CreateRepoDialog } from "@/components/create-repo-dialog";
 import { cn, timeAgo } from "@/lib/utils";
 
 type Repo = {
@@ -43,6 +47,7 @@ type Repo = {
 };
 
 export function ReposView() {
+  const router = useRouter();
   const { accounts, currentId, current } = useAccount();
   const [repos, setRepos] = useState<Repo[]>([]);
   const [page, setPage] = useState(1);
@@ -63,6 +68,7 @@ export function ReposView() {
   const [editPrivate, setEditPrivate] = useState(false);
   const [editArchived, setEditArchived] = useState(false);
   const [openRepoMenuId, setOpenRepoMenuId] = useState<number | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = useCallback(
     async (targetPage: number, append: boolean) => {
@@ -252,15 +258,21 @@ export function ReposView() {
           </>
         }
         actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => void load(1, false)}
-            loading={loading}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Aggiorna
-          </Button>
+          <>
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Nuova repository
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void load(1, false)}
+              loading={loading}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Aggiorna
+            </Button>
+          </>
         }
       />
 
@@ -397,6 +409,7 @@ export function ReposView() {
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/issues`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><CircleDot className="h-3.5 w-3.5" /> Issues</a>
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/pulls`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><GitPullRequest className="h-3.5 w-3.5" /> Pull request</a>
                   <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}/actions`} target="_blank" rel="noopener noreferrer" onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><RefreshCw className="h-3.5 w-3.5" /> Actions</a>
+                  <a href={`/api/github/download?${new URLSearchParams({ accountId: currentId ?? "", owner: repo.owner, repo: repo.name, ref: repo.defaultBranch }).toString()}`} onClick={() => setOpenRepoMenuId(null)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><Download className="h-3.5 w-3.5" /> Scarica ZIP</a>
                   <button onClick={() => { setOpenRepoMenuId(null); void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti.")); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white"><StarIcon className="h-3.5 w-3.5" /> {favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}</button>
                   <button onClick={() => { setOpenRepoMenuId(null); openEditor(repo); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07] hover:text-white">
                     <Pencil className="h-3.5 w-3.5" /> Modifica proprietà
@@ -464,6 +477,15 @@ export function ReposView() {
           </form>
         </div>
       ) : null}
+
+      <CreateRepoDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(repo) => {
+          setCreateOpen(false);
+          router.push(`/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`);
+        }}
+      />
 
       {hasMore ? (
         <div className="flex justify-center pt-2">

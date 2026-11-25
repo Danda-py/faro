@@ -90,6 +90,10 @@ export type GithubContent = {
 
 export type GithubBranch = { name: string };
 
+export type GithubRef = { ref: string; object: { sha: string } };
+
+export type GithubCommit = { sha: string; tree: { sha: string } };
+
 export async function getUser(token: string) {
   return gh<GithubUser>(token, "/user");
 }
@@ -137,6 +141,135 @@ export async function updateRepo(
 
 export async function deleteRepo(token: string, owner: string, repo: string) {
   return gh<void>(token, `/repos/${owner}/${repo}`, { method: "DELETE" });
+}
+
+export async function createRepo(
+  token: string,
+  input: { name: string; description?: string | null; private?: boolean },
+) {
+  return gh<GithubRepo>(token, "/user/repos", {
+    method: "POST",
+    body: JSON.stringify({
+      name: input.name,
+      description: input.description?.trim() || null,
+      private: input.private ?? false,
+      auto_init: true,
+    }),
+  });
+}
+
+export async function createBlob(
+  token: string,
+  owner: string,
+  repo: string,
+  contentBase64: string,
+) {
+  return gh<{ sha: string }>(token, `/repos/${owner}/${repo}/git/blobs`, {
+    method: "POST",
+    body: JSON.stringify({ content: contentBase64, encoding: "base64" }),
+  });
+}
+
+/**
+ * Crea un unico commit con i file indicati (già caricati come blob),
+ * partendo dall'HEAD corrente del branch.
+ */
+export async function importFiles(
+  token: string,
+  owner: string,
+  repo: string,
+  input: { branch: string; message: string; files: { path: string; sha: string }[] },
+) {
+  if (input.files.length === 0) return { commit: null, files: 0 };
+  if (input.files.length > 3000) throw new GithubError(400, "Troppi file in un solo commit (massimo 3000).");
+
+  const treeItems = input.files.map((file) => ({
+    path: normalizeRepoPath(file.path),
+    mode: "100644",
+    type: "blob" as const,
+    sha: file.sha,
+  }));
+  const unique = new Set(treeItems.map((item) => item.path));
+  if (unique.size !== treeItems.length) throw new GithubError(400, "Ci sono percorsi duplicati tra i file.");
+
+  const branchPath = encodeRefPath(input.branch);
+  const ref = await gh<GithubRef>(token, `/repos/${owner}/${repo}/git/ref/heads/${branchPath}`);
+  const parent = await gh<GithubCommit>(token, `/repos/${owner}/${repo}/git/commits/${ref.object.sha}`);
+  const tree = await gh<{ sha: string }>(token, `/repos/${owner}/${repo}/git/trees`, {
+    method: "POST",
+    body: JSON.stringify({ base_tree: parent.tree.sha, tree: treeItems }),
+  });
+  const commit = await gh<{ sha: string }>(token, `/repos/${owner}/${repo}/git/commits`, {
+    method: "POST",
+    body: JSON.stringify({
+      message: input.message,
+      tree: tree.sha,
+      parents: [ref.object.sha],
+    }),
+  });
+  await gh(token, `/repos/${owner}/${repo}/git/refs/heads/${branchPath}`, {
+    method: "PATCH",
+    body: JSON.stringify({ sha: commit.sha, force: false }),
+  });
+  return { commit: commit.sha, files: treeItems.length };
+}
+
+/**
+ * Scarica l'archivio ZIP dell'intero repository. GitHub risponde con un redirect
+ * verso codeload; il fetch lo segue e l'URL temporaneo contiene già l'autorizzazione.
+ */
+export async function downloadArchive(
+  token: string,
+  owner: string,
+  repo: string,
+  ref?: string,
+) {
+  const url = `${API}/repos/${owner}/${repo}/zipball${ref ? `/${encodeURIComponent(ref)}` : ""}`;
+  const res = await fetch(url, {
+    cache: "no-store",
+    redirect: "follow",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "portale",
+    },
+  });
+  if (!res.ok) {
+    let message = res.statusText || `Errore GitHub (${res.status})`;
+    try {
+      const body = (await res.json()) as { message?: string };
+      if (body?.message) message = body.message;
+    } catch {
+      /* corpo non JSON */
+    }
+    throw new GithubError(res.status, message);
+  }
+  return res;
+}
+
+/** Percorso file relativo al repository, validato contro traversal e cartelle .git. */
+export function normalizeRepoPath(input: string) {
+  const path = input.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+|\/+$/g, "");
+  const parts = path.split("/");
+  if (
+    !path ||
+    path.length > 1024 ||
+    parts.some(
+      (part) =>
+        !part ||
+        part === "." ||
+        part === ".." ||
+        part.toLowerCase() === ".git",
+    )
+  ) {
+    throw new GithubError(400, `Percorso file non valido: ${input.slice(0, 120)}`);
+  }
+  return path;
+}
+
+function encodeRefPath(ref: string) {
+  return ref.split("/").map(encodeURIComponent).join("/");
 }
 
 export async function listBranches(token: string, owner: string, repo: string) {

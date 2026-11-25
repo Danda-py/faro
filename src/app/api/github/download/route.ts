@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { resolveAccount } from "@/lib/accounts";
-import { getContent, rawBuffer } from "@/lib/github";
+import { downloadArchive, getContent, rawBuffer } from "@/lib/github";
 import { handleError, unauthorized } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -18,12 +19,28 @@ export async function GET(req: Request) {
     const path = params.get("path");
     const ref = params.get("ref") || undefined;
 
-    if (!owner || !repo || !path) {
+    if (!owner || !repo) {
       return NextResponse.json({ error: "Dati incompleti." }, { status: 400 });
     }
 
     const account = await resolveAccount(session.userId, params.get("accountId"));
     if (!account) return NextResponse.json({ error: "Nessun account collegato." }, { status: 400 });
+
+    // Senza percorso si scarica l'intero repository come archivio ZIP.
+    if (!path) {
+      const archive = await downloadArchive(account.token, owner, repo, ref);
+      const suffix = ref ? `-${ref}` : "";
+      const fileName = `${owner}-${repo}${suffix}.zip`.replace(/[^\w.\-]+/g, "-").slice(0, 180);
+      return new NextResponse(archive.body, {
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Disposition": `attachment; filename="${fileName}"`,
+          ...(archive.headers.get("content-length")
+            ? { "Content-Length": archive.headers.get("content-length") as string }
+            : {}),
+        },
+      });
+    }
 
     const content = await getContent(account.token, owner, repo, path, ref);
     if (Array.isArray(content) || content.type !== "file") {
