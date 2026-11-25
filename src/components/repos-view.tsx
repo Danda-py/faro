@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 import { useAccount } from "@/components/account-provider";
 import { apiFetch } from "@/lib/client-api";
-import { Alert, Button, Input } from "@/components/ui";
-import { timeAgo } from "@/lib/utils";
+import { Alert, Button, Input, PageHeader } from "@/components/ui";
+import { cn, timeAgo } from "@/lib/utils";
 
 type Repo = {
   id: number;
@@ -234,35 +234,49 @@ export function ReposView() {
 
   return (
     <div className="space-y-5 py-2">
-      <header className="animate-fade-up flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-zinc-600">Workspace</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+      <PageHeader
+        eyebrow="Workspace"
+        title={
+          <>
             Repository di{" "}
             <span className="gradient-text">{current?.label || current?.login || "—"}</span>
-          </h1>
-          <p className="mt-1.5 text-sm text-zinc-500">
-            {repos.filter((repo) => !hiddenIds.includes(repo.id)).length} repository visibili · {current?.login}
-            {syncedAt ? <span className="ml-2 text-zinc-600">· sincronizzati {timeAgo(syncedAt)}</span> : null}
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void load(1, false)}
-          loading={loading}
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Aggiorna
-        </Button>
-      </header>
+          </>
+        }
+        description={
+          <>
+            {repos.filter((repo) => !hiddenIds.includes(repo.id)).length} repository visibili ·{" "}
+            {current?.login}
+            {syncedAt ? (
+              <span className="ml-2 text-zinc-600">· sincronizzati {timeAgo(syncedAt)}</span>
+            ) : null}
+          </>
+        }
+        actions={
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void load(1, false)}
+            loading={loading}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Aggiorna
+          </Button>
+        }
+      />
 
       {recentIds.length > 0 ? (
-        <section className="glass p-4">
-          <div className="mb-3 flex items-center gap-2 text-xs font-medium text-zinc-300"><Clock3 className="h-3.5 w-3.5 text-cyan-300" />Riprendi da dove eri</div>
-          <div className="flex flex-wrap gap-2">
+        <section className="glass overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3 text-[12px] font-medium text-zinc-300">
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300"><Clock3 className="h-3.5 w-3.5" /></span>
+            Riprendi da dove eri
+            <span className="ml-auto text-[11px] font-normal text-zinc-600">Accessi recenti</span>
+          </div>
+          <div className="flex flex-wrap gap-2 p-3.5">
             {recentIds.flatMap((id) => repos.filter((repo) => repo.id === id)).map((repo) => (
-              <Link key={repo.id} href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs text-zinc-300 transition hover:border-cyan-300/20 hover:text-white">{repo.fullName}</Link>
+              <Link key={repo.id} href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="group flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2 text-xs text-zinc-300 transition hover:-translate-y-px hover:border-cyan-300/25 hover:bg-white/[0.05] hover:text-white">
+                <FolderGit2 className="h-3.5 w-3.5 text-zinc-500 transition group-hover:text-cyan-300" />
+                {repo.fullName}
+              </Link>
             ))}
           </div>
         </section>
@@ -270,21 +284,45 @@ export function ReposView() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative min-w-[240px] flex-1">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Cerca un repository…"
-          className="!pl-10"
-        />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Cerca un repository…"
+            aria-label="Cerca un repository"
+            className="!pl-10"
+          />
         </div>
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.02] p-1">
           {(["all", "favorites", "recent"] as const).map((filter) => (
-            <Button key={filter} variant={repoFilter === filter ? "primary" : "ghost"} size="sm" onClick={() => setRepoFilter(filter)}>
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setRepoFilter(filter)}
+              aria-pressed={repoFilter === filter}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-[12px] font-medium transition duration-200",
+                repoFilter === filter
+                  ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                  : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200",
+              )}
+            >
               {filter === "all" ? "Tutti" : filter === "favorites" ? `Preferiti (${favoriteIds.length})` : "Recenti"}
-            </Button>
+            </button>
           ))}
-          {hiddenIds.length > 0 ? <Button variant="ghost" size="sm" onClick={() => setShowHidden((value) => !value)}>{showHidden ? "Nascondi nascosti" : `Mostra nascosti (${hiddenIds.length})`}</Button> : null}
+          {hiddenIds.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowHidden((value) => !value)}
+              aria-pressed={showHidden}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-[12px] font-medium transition duration-200",
+                showHidden ? "bg-white/[0.09] text-white" : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200",
+              )}
+            >
+              {showHidden ? "Nascondi nascosti" : `Mostra nascosti (${hiddenIds.length})`}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -293,15 +331,20 @@ export function ReposView() {
       {loading && repos.length === 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="glass h-36 animate-pulse bg-white/[0.03]" />
+            <div key={index} className="glass h-[184px] animate-pulse bg-white/[0.03]" />
           ))}
         </div>
       ) : null}
 
       {!loading && filtered.length === 0 && !error ? (
-        <div className="glass p-10 text-center">
-          <FolderGit2 className="mx-auto mb-3 h-6 w-6 text-zinc-600" />
-          <p className="text-sm text-zinc-400">Nessun repository trovato.</p>
+        <div className="glass flex flex-col items-center p-12 text-center">
+          <span className="mb-4 grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-zinc-500">
+            <FolderGit2 className="h-5 w-5" />
+          </span>
+          <p className="text-sm font-medium text-zinc-200">Nessun repository trovato</p>
+          <p className="mt-1 text-[12.5px] text-zinc-500">
+            Prova a cambiare ricerca o filtro per vedere altri repository.
+          </p>
         </div>
       ) : null}
 
@@ -309,31 +352,27 @@ export function ReposView() {
         {filtered.map((repo) => (
           <article
             key={repo.id}
-            className="glass glass-hover group relative flex min-h-[172px] flex-col justify-between p-4"
+            className="glass glass-hover group relative flex min-h-[184px] flex-col overflow-hidden p-4"
           >
-            <Link href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="block pr-8">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] text-zinc-600">{repo.owner}</p>
-                  <h2 className="truncate text-[15px] font-medium text-zinc-100">{repo.name}</h2>
-                </div>
-                <span className="mt-0.5 text-zinc-600">
-                  {repo.private ? <Lock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+            <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <Link href={`/repos/${repo.owner}/${repo.name}`} onClick={() => void updatePreference(repo, { opened: true })} className="block pr-9">
+              <div className="flex items-center gap-2 text-[10.5px] font-medium uppercase tracking-[0.14em] text-zinc-600">
+                <span className="truncate">{repo.owner}</span>
+                <span className="grid h-4 w-4 place-items-center rounded text-zinc-600">
+                  {repo.private ? (
+                    <Lock className="h-3 w-3" aria-label="Privato" />
+                  ) : (
+                    <Globe className="h-3 w-3" aria-label="Pubblico" />
+                  )}
                 </span>
               </div>
+              <h2 className="mt-1 truncate text-[15.5px] font-semibold tracking-[-0.015em] text-zinc-50 transition-colors group-hover:text-white">
+                {repo.name}
+              </h2>
               <p className="mt-2 line-clamp-2 min-h-[34px] text-[12.5px] leading-relaxed text-zinc-500">
                 {repo.description || "Nessuna descrizione."}
               </p>
             </Link>
-            <div className="absolute bottom-11 right-3 flex items-center">
-              <button
-                onClick={() => void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti."))}
-                aria-label={favoriteIds.includes(repo.id) ? `Rimuovi ${repo.name} dai preferiti` : `Aggiungi ${repo.name} ai preferiti`}
-                title={favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
-                className={`grid h-8 w-8 place-items-center rounded-lg transition hover:bg-white/[0.08] ${favoriteIds.includes(repo.id) ? "text-amber-300" : "text-zinc-500 hover:text-amber-200"}`}
-              ><StarIcon className="h-3.5 w-3.5" fill={favoriteIds.includes(repo.id) ? "currentColor" : "none"} /></button>
-              <a href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`} target="_blank" rel="noopener noreferrer" aria-label={`Visita ${repo.fullName} su GitHub`} title="Visita su GitHub" className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.08] hover:text-cyan-200"><ExternalLink className="h-3.5 w-3.5" /></a>
-            </div>
             <div className="absolute right-3 top-3" data-repo-menu>
               <button
                 type="button"
@@ -365,14 +404,39 @@ export function ReposView() {
                 </div>
               ) : null}
             </div>
-            <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-600">
-              <div className="flex items-center gap-3">
-                {repo.language ? <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />{repo.language}</span> : null}
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/[0.06] pt-2.5 text-[11px] text-zinc-500">
+              <div className="flex min-w-0 items-center gap-2.5">
+                {repo.language ? (
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(129,140,248,0.8)]" />
+                    <span className="truncate">{repo.language}</span>
+                  </span>
+                ) : null}
                 {repo.stars > 0 ? <span className="flex items-center gap-1"><Star className="h-3 w-3" />{repo.stars}</span> : null}
-                <span>{timeAgo(repo.updatedAt)}</span>
-                {hiddenIds.includes(repo.id) ? <span className="rounded bg-white/10 px-1.5 py-0.5 text-zinc-300">Nascosto</span> : null}
+                <span className="whitespace-nowrap text-zinc-600">{timeAgo(repo.updatedAt)}</span>
+                {hiddenIds.includes(repo.id) ? <span className="rounded-md bg-white/[0.08] px-1.5 py-0.5 text-[10px] text-zinc-300">Nascosto</span> : null}
               </div>
-              <ArrowRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100" />
+              <div className="flex shrink-0 items-center gap-0.5">
+                <button
+                  onClick={() => void updatePreference(repo, { favorite: !favoriteIds.includes(repo.id) }).catch((err) => setError(err instanceof Error ? err.message : "Impossibile aggiornare i preferiti."))}
+                  aria-label={favoriteIds.includes(repo.id) ? `Rimuovi ${repo.name} dai preferiti` : `Aggiungi ${repo.name} ai preferiti`}
+                  title={favoriteIds.includes(repo.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
+                  className={`grid h-7 w-7 place-items-center rounded-lg transition hover:bg-white/[0.08] ${favoriteIds.includes(repo.id) ? "text-amber-300" : "text-zinc-500 hover:text-amber-200"}`}
+                >
+                  <StarIcon className="h-3.5 w-3.5" fill={favoriteIds.includes(repo.id) ? "currentColor" : "none"} />
+                </button>
+                <a
+                  href={`https://github.com/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Visita ${repo.fullName} su GitHub`}
+                  title="Visita su GitHub"
+                  className="grid h-7 w-7 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.08] hover:text-cyan-200"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+                <ArrowRight className="ml-0.5 h-3.5 w-3.5 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-indigo-300" />
+              </div>
             </div>
           </article>
         ))}
