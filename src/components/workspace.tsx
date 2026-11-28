@@ -7,7 +7,10 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Code2,
+  Copy,
   Download,
+  ExternalLink,
   FileCode2,
   FilePlus2,
   Folder,
@@ -70,6 +73,26 @@ function buildTreeRows(entries: TreeEntry[], expanded: Set<string>, term: string
   };
   visit(root, 0);
   return rows;
+}
+
+/** Indenta o riduce il rientro delle righe selezionate (Tab / Shift+Tab). */
+function indentSelection(value: string, start: number, end: number, outdent = false) {
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const lineEnd = value.indexOf("\n", end);
+  const blockEnd = lineEnd === -1 ? value.length : lineEnd;
+  const lines = value.slice(lineStart, blockEnd).split("\n");
+  const next = lines
+    .map((line) =>
+      outdent
+        ? line.replace(/^( {1,2}|\t)/, "")
+        : `${line.trim() ? "  " : ""}${line}`,
+    )
+    .join("\n");
+  return {
+    value: value.slice(0, lineStart) + next + value.slice(blockEnd),
+    start: lineStart,
+    end: lineStart + next.length,
+  };
 }
 
 type TreePayload = {
@@ -462,6 +485,65 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
   const dirty = Boolean(file && draft !== file.content);
 
+  const cloneUrl = `https://github.com/${owner}/${repo}.git`;
+  const vscodeCloneUri = `vscode://vscode.git/clone?url=${encodeURIComponent(cloneUrl)}`;
+  const webEditorUrl = `https://github.dev/${owner}/${repo}`;
+
+  const saveShortcutRef = useRef<() => void>(() => {});
+  saveShortcutRef.current = () => {
+    if (dirty && !saving) void saveFile();
+  };
+
+  // Ctrl/Cmd+S salva senza perdere il focus dall'editor.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "s") return;
+      event.preventDefault();
+      saveShortcutRef.current();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  async function copyCloneCommand() {
+    try {
+      await navigator.clipboard.writeText(`git clone ${cloneUrl}`);
+      setNotice("Comando git clone copiato negli appunti.");
+    } catch {
+      setError(`Copia non riuscita: comando da usare a mano: git clone ${cloneUrl}`);
+    }
+  }
+
+  function onEditorKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    const area = event.currentTarget;
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      if (dirty && !saving) void saveFile();
+      return;
+    }
+
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const { selectionStart, selectionEnd } = area;
+      const result = indentSelection(draft, selectionStart, selectionEnd, event.shiftKey);
+      setDraft(result.value);
+      requestAnimationFrame(() => area.setSelectionRange(result.start, result.end));
+      return;
+    }
+
+    if (event.key === "Enter" && area.selectionStart === area.selectionEnd) {
+      const position = area.selectionStart;
+      const lineStart = draft.lastIndexOf("\n", position - 1) + 1;
+      const indent = /^[\t ]*/.exec(draft.slice(lineStart, position))?.[0] ?? "";
+      if (!indent) return;
+      event.preventDefault();
+      const insert = `\n${indent}`;
+      setDraft(draft.slice(0, position) + insert + draft.slice(position));
+      const caret = position + insert.length;
+      requestAnimationFrame(() => area.setSelectionRange(caret, caret));
+    }
+  }
+
   return (
     <div className="space-y-4 py-2">
       <header className="animate-fade-up flex flex-wrap items-center justify-between gap-3">
@@ -514,6 +596,47 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
             <Download className="h-3.5 w-3.5" />
             ZIP
           </Button>
+          <details className="relative">
+            <summary
+              className="inline-flex h-9 cursor-pointer list-none select-none items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.045] px-3.5 text-[12.5px] font-medium text-zinc-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white"
+              title="Apri il repository nel tuo editor"
+            >
+              <Code2 className="h-3.5 w-3.5" />
+              VS Code
+            </summary>
+            <div className="absolute right-0 z-30 mt-1 w-64 rounded-xl border border-white/10 bg-[#111522]/95 p-1 shadow-2xl backdrop-blur-xl">
+              <a
+                href={vscodeCloneUri}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Clona e apri in VS Code
+              </a>
+              <a
+                href={webEditorUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"
+              >
+                <Code2 className="h-3.5 w-3.5" />
+                Modifica su github.dev
+              </a>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  void copyCloneCommand();
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copia comando git clone
+              </button>
+              <p className="px-3 pb-1.5 pt-1 text-[10.5px] leading-relaxed text-zinc-600">
+                Il clona-apri richiede VS Code installato sul computer.
+              </p>
+            </div>
+          </details>
           <Button
             variant="ghost"
             size="sm"
@@ -723,10 +846,21 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={onEditorKeyDown}
                   spellCheck={false}
+                  wrap="off"
                   className="min-h-[420px] flex-1 resize-none bg-transparent p-4 font-mono text-[12.5px] leading-relaxed text-zinc-200 outline-none"
                 />
               )}
+              {!file.binary ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/5 px-3.5 py-1.5 text-[10.5px] text-zinc-600">
+                  <span>{draft.split("\n").length} righe · {draft.length} caratteri</span>
+                  <span>
+                    <kbd className="font-mono text-zinc-500">Ctrl/⌘+S</kbd> salva ·{" "}
+                    <kbd className="font-mono text-zinc-500">Tab</kbd> indenta
+                  </span>
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
