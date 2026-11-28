@@ -13,6 +13,54 @@ export class GithubError extends Error {
   }
 }
 
+export type GithubTokenResponse = {
+  access_token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  refresh_token_expires_in?: number;
+  scope?: string;
+  token_type?: string;
+  error?: string;
+  error_description?: string;
+};
+
+/**
+ * Rinnova un access token scaduto con il refresh token di un'OAuth App che usa
+ * token a scadenza (8 ore). GitHub restituisce una nuova coppia di token: il
+ * refresh token usato smette di funzionare, quindi va salvato subito.
+ */
+export async function refreshAccessToken(
+  refreshToken: string,
+): Promise<GithubTokenResponse & { access_token: string }> {
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new GithubError(500, "GITHUB_CLIENT_ID o GITHUB_CLIENT_SECRET non configurati.");
+  }
+
+  const res = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+    cache: "no-store",
+  });
+
+  const data = (await res.json().catch(() => ({}))) as GithubTokenResponse;
+  if (!res.ok || data.error || !data.access_token) {
+    throw new GithubError(
+      401,
+      "GitHub non ha rinnovato il token: ricollega l'account.",
+      data.error_description || data.error,
+    );
+  }
+  return { ...data, access_token: data.access_token };
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

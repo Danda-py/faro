@@ -35,7 +35,9 @@ export async function GET(req: Request) {
   const authorize = new URL("https://github.com/login/oauth/authorize");
   authorize.searchParams.set("client_id", clientId);
   authorize.searchParams.set("redirect_uri", redirectUri);
-  authorize.searchParams.set("scope", "repo read:user user:email user");
+  // offline_access garantisce un refresh token anche se l'OAuth App non è
+  // configurata per i token a scadenza: il token (8 ore) si rinnova da solo.
+  authorize.searchParams.set("scope", "repo read:user user:email user offline_access");
   authorize.searchParams.set("state", state);
   if (mode === "link") {
     // GitHub riusa la sessione del browser: senza prompt=select_account chi

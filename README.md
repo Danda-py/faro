@@ -14,6 +14,9 @@ a scelta. Pensato per uso personale, pronto per essere esteso a compagni di scuo
   entrambi gli account sono sempre allineati. Le modifiche sono commit immediati.
 - **Gestione file**: albero del repository, editor, creazione, upload dal computer,
   download, eliminazione. Ogni modifica è un commit sul branch selezionato.
+  Nell'editor `Ctrl/⌘+S` salva, `Tab`/`Shift+Tab` indentano, invio mantiene il rientro.
+  Il menu **VS Code** clona e apre il repository nell'editor locale (`vscode://`),
+  apre la versione web `github.dev` o copia il comando `git clone`.
 - **AI multi-provider** configurabile dal portale:
   - Gemini, OpenAI, Anthropic Claude, DeepSeek, Qwen (DashScope), Ollama e qualsiasi
     endpoint OpenAI-compatible (Groq, OpenRouter, LM Studio, vLLM…).
@@ -62,8 +65,13 @@ npm run dev
 4. Copia `Client ID` e `Client Secret` nelle variabili d'ambiente.
 5. In produzione aggiorna la callback con il dominio Vercel.
 
-Scope richiesti: `repo read:user user:email` (servono per leggere e scrivere anche nei
-repository privati).
+Scope richiesti: `repo read:user user:email offline_access` (servono per leggere e scrivere
+anche nei repository privati).
+
+GitHub emette access token validi **8 ore** con un refresh token valido 6 mesi:
+Faro salva entrambi (cifrati) e rinnova il token da solo, quindi il collegamento non
+scade più dopo qualche ora di inattività. `offline_access` assicura il refresh token
+anche se l'OAuth App non è configurata per i token a scadenza.
 
 ### 3. AI
 

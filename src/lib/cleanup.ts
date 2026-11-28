@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { decryptToken } from "@/lib/crypto";
+import { resolveAccount } from "@/lib/accounts";
 import {
   decodeContent,
   getContent,
@@ -181,12 +181,23 @@ export async function scanForUser(
 
     let token: string;
     try {
-      token = decryptToken(account.tokenCipher);
-    } catch {
+      const resolved = await resolveAccount(userId, account.id);
+      if (!resolved) {
+        results.push({
+          account: account.login,
+          repo: "-",
+          error: "Account non trovato: ricollegalo.",
+        });
+        continue;
+      }
+      // resolveAccount rinnova anche i token GitHub a scadenza.
+      token = resolved.token;
+    } catch (error) {
       results.push({
         account: account.login,
         repo: "-",
-        error: "Token non leggibile: ricollega l'account.",
+        error:
+          error instanceof Error ? error.message : "Token non leggibile: ricollega l'account.",
       });
       continue;
     }

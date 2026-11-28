@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
-import { encryptToken } from "@/lib/crypto";
+import { packToken, tokenSetFromResponse } from "@/lib/accounts";
 import { getUser, getUserEmails } from "@/lib/github";
 import { sessionCookieOptions, signSession, SESSION_COOKIE } from "@/lib/session";
 import { appOrigin } from "@/lib/api";
@@ -48,6 +48,9 @@ export async function GET(req: Request) {
 
   let accessToken: string | undefined;
   let scope: string | undefined;
+  // Presenti solo se l'OAuth App usa token a scadenza (8 ore).
+  let refreshToken: string | undefined;
+  let expiresIn: number | undefined;
 
   try {
     const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
@@ -63,10 +66,14 @@ export async function GET(req: Request) {
     });
     const tokenJson = (await tokenRes.json()) as {
       access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
       scope?: string;
       error_description?: string;
     };
     accessToken = tokenJson.access_token;
+    refreshToken = tokenJson.refresh_token;
+    expiresIn = tokenJson.expires_in;
     scope = tokenJson.scope;
     if (!accessToken) return fail(tokenJson.error_description || "token_exchange");
   } catch {
@@ -88,7 +95,13 @@ export async function GET(req: Request) {
     name: ghUser.name,
     avatarUrl: ghUser.avatar_url,
     email,
-    tokenCipher: encryptToken(accessToken),
+    tokenCipher: packToken(
+      tokenSetFromResponse({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: expiresIn,
+      }),
+    ),
     scope: scope ?? null,
   };
 
