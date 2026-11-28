@@ -427,6 +427,44 @@ export async function listBranches(token: string, owner: string, repo: string) {
   return gh<GithubBranch[]>(token, `/repos/${owner}/${repo}/branches?per_page=100`);
 }
 
+export type GithubCodeMatch = { path: string; fragment: string };
+
+export type GithubCodeSearch = {
+  total: number;
+  truncated: boolean;
+  results: GithubCodeMatch[];
+};
+
+/**
+ * Cerca del testo dentro i file del repository con la code search di GitHub.
+ * La ricerca avviene sul branch predefinito del repository.
+ */
+export async function searchCode(
+  token: string,
+  owner: string,
+  repo: string,
+  term: string,
+  page = 1,
+): Promise<GithubCodeSearch> {
+  const query = `${term} repo:${owner}/${repo}`;
+  const data = await gh<{
+    total_count: number;
+    incomplete_results: boolean;
+    items: Array<{ path: string; text_matches?: Array<{ fragment?: string }> }>;
+  }>(token, `/search/code?q=${encodeURIComponent(query)}&per_page=30&page=${page}`, {
+    headers: { Accept: "application/vnd.github.text-match+json" },
+  });
+
+  return {
+    total: data.total_count,
+    truncated: Boolean(data.incomplete_results) || data.items.length < data.total_count,
+    results: data.items.map((item) => ({
+      path: item.path,
+      fragment: (item.text_matches?.[0]?.fragment ?? "").trim().slice(0, 240),
+    })),
+  };
+}
+
 export async function getTree(token: string, owner: string, repo: string, ref: string) {
   return gh<{ tree: GithubTreeEntry[]; truncated: boolean }>(
     token,

@@ -139,6 +139,13 @@ type CleanupPayload = {
   scanned: number;
 };
 
+type CodeSearchPayload = {
+  term: string;
+  total: number;
+  truncated: boolean;
+  results: { path: string; fragment: string }[];
+};
+
 export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   const { currentId, current } = useAccount();
 
@@ -176,6 +183,10 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
   const [cleanup, setCleanup] = useState<CleanupPayload | null>(null);
   const [toDelete, setToDelete] = useState<string[]>([]);
 
+  const [codeTerm, setCodeTerm] = useState("");
+  const [codeSearching, setCodeSearching] = useState(false);
+  const [codeResults, setCodeResults] = useState<CodeSearchPayload | null>(null);
+
   const loadTree = useCallback(
     async (ref?: string) => {
       if (!currentId) return;
@@ -206,6 +217,8 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
     setSelected(null);
     setCleanup(null);
     setFix(null);
+    setCodeResults(null);
+    setCodeTerm("");
     void loadTree();
   }, [loadTree]);
 
@@ -396,6 +409,23 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
       setError(err instanceof Error ? err.message : "Revisione AI fallita.");
     } finally {
       setFixing(false);
+    }
+  }
+
+  async function searchInRepository(event?: React.FormEvent) {
+    event?.preventDefault();
+    const term = codeTerm.trim();
+    if (!currentId || term.length < 2) return;
+    setCodeSearching(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({ accountId: currentId, owner, repo, q: term });
+      const data = await apiFetch<CodeSearchPayload>(`/api/github/search?${params.toString()}`);
+      setCodeResults(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ricerca non riuscita.");
+    } finally {
+      setCodeSearching(false);
     }
   }
 
@@ -945,6 +975,70 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                     Applica e salva
                   </Button>
                 </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="glass p-4">
+            <h2 className="flex items-center gap-2 text-[13px] font-medium text-zinc-200">
+              <Search className="h-4 w-4 text-amber-300" />
+              Cerca nel codice
+            </h2>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+              Trova dove compare una funzione, una costante o una stringa in tutti i file del
+              repository. La ricerca di GitHub guarda il branch predefinito.
+            </p>
+            <form
+              className="mt-3 flex items-center gap-1.5"
+              onSubmit={(event) => void searchInRepository(event)}
+            >
+              <Input
+                value={codeTerm}
+                onChange={(event) => setCodeTerm(event.target.value)}
+                placeholder="es. prenota"
+                aria-label="Testo da cercare nel codice"
+                className="!py-2 !text-[12.5px]"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                loading={codeSearching}
+                disabled={codeTerm.trim().length < 2}
+                title="Cerca nel codice"
+              >
+                <Search className="h-3.5 w-3.5" />
+              </Button>
+            </form>
+
+            {codeResults ? (
+              <div className="mt-3 space-y-1.5">
+                <p className="text-[11px] text-zinc-500">
+                  {codeResults.total} risultati per{" "}
+                  <span className="font-mono text-zinc-400">{codeResults.term}</span>
+                  {codeResults.truncated ? " · mostrati i primi 30" : ""}
+                </p>
+                {codeResults.results.map((hit) => (
+                  <button
+                    key={`${hit.path}:${hit.fragment.slice(0, 24)}`}
+                    type="button"
+                    onClick={() => void openFile(hit.path)}
+                    className="block w-full rounded-lg border border-white/5 bg-white/[0.02] p-2 text-left transition hover:border-white/15 hover:bg-white/[0.05]"
+                  >
+                    <span className="block break-all font-mono text-[11.5px] text-zinc-300">
+                      {hit.path}
+                    </span>
+                    {hit.fragment ? (
+                      <span className="mt-0.5 block whitespace-pre-wrap break-words font-mono text-[10.5px] leading-relaxed text-zinc-500">
+                        {hit.fragment}
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+                {codeResults.results.length === 0 ? (
+                  <p className="text-[11.5px] text-emerald-300/80">
+                    Nessun file contiene questo testo.
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>

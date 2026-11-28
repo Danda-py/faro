@@ -17,6 +17,8 @@ a scelta. Pensato per uso personale, pronto per essere esteso a compagni di scuo
   Nell'editor `Ctrl/⌘+S` salva, `Tab`/`Shift+Tab` indentano, invio mantiene il rientro.
   Il menu **VS Code** clona e apre il repository nell'editor locale (`vscode://`),
   apre la versione web `github.dev` o copia il comando `git clone`.
+- **Ricerca nel codice**: cerca una funzione, una costante o una stringa in tutti i file
+  del repository (code search di GitHub, branch predefinito) e apre il file con un clic.
 - **AI multi-provider** configurabile dal portale:
   - Gemini, OpenAI, Anthropic Claude, DeepSeek, Qwen (DashScope), Ollama e qualsiasi
     endpoint OpenAI-compatible (Groq, OpenRouter, LM Studio, vLLM…).
