@@ -32,7 +32,9 @@ a scelta. Pensato per uso personale, pronto per essere esteso a compagni di scuo
     aggiornati di recente e salva le proposte nella pagina *Pulizia*.
   - Nulla viene cancellato in automatico: ogni eliminazione richiede conferma.
 - **Chat AI** con cronologia salvata su database.
-- **UI glassmorphism**: vetro sfocato, gradienti viola/ciano, animazioni leggere.
+- **UI essenziale**: superfici piatte in grafite caldo, etichette monospace, un solo colore
+  d'azione (carta) e niente gradienti, glow o animazioni: l'informazione sta nella gerarchia,
+  non nella decorazione.
 
 ## Stack
 

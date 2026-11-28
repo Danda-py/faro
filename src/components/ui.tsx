@@ -9,17 +9,18 @@ type Size = "sm" | "md";
 
 const variants: Record<Variant, string> = {
   primary:
-    "border border-indigo-300/25 bg-gradient-to-b from-indigo-500 to-indigo-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_30px_-14px_rgba(99,102,241,0.85)] hover:from-indigo-400 hover:to-indigo-500 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_14px_34px_-14px_rgba(99,102,241,0.95)] active:translate-y-px",
+    "border border-transparent bg-paper text-ink-950 hover:bg-white active:bg-signal-100",
   ghost:
-    "border border-white/10 bg-white/[0.045] text-zinc-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-white/20 hover:bg-white/[0.075] hover:text-white active:translate-y-px",
+    "border border-white/15 bg-transparent text-signal-200 hover:border-white/30 hover:text-paper active:bg-white/[0.04]",
   danger:
-    "border border-rose-400/20 bg-rose-500/10 text-rose-200 hover:border-rose-400/35 hover:bg-rose-500/20 hover:text-rose-100 active:translate-y-px",
-  subtle: "border border-transparent text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100",
+    "border border-rose-400/30 bg-transparent text-rose-200 hover:border-rose-400/50 hover:bg-rose-500/10",
+  subtle:
+    "border border-transparent text-signal-400 hover:bg-white/[0.05] hover:text-paper",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3.5 text-[12.5px] rounded-lg gap-1.5",
-  md: "h-11 px-5 text-sm rounded-xl gap-2",
+  sm: "h-8 px-3 text-[12.5px] rounded gap-1.5",
+  md: "h-10 px-4 text-[13.5px] rounded gap-2",
 };
 
 export function Button({
@@ -40,13 +41,13 @@ export function Button({
       {...props}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex select-none items-center justify-center font-medium tracking-[-0.01em] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0",
+        "inline-flex select-none items-center justify-center font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-45",
         variants[variant],
         sizes[size],
         className,
       )}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
       {children}
     </button>
   );
@@ -87,7 +88,7 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "animate-fade-up flex flex-wrap items-end justify-between gap-4",
+        "flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.07] pb-4",
         className,
       )}
     >
@@ -95,19 +96,15 @@ export function PageHeader({
         {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
         <h1
           className={cn(
-            "flex items-center gap-3 text-[26px] font-semibold leading-tight tracking-[-0.025em] text-zinc-50",
+            "flex items-center gap-2.5 text-[24px] font-medium leading-tight tracking-[-0.02em] text-paper",
             eyebrow ? "mt-1.5" : "",
           )}
         >
-          {icon ? (
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-violet-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-              {icon}
-            </span>
-          ) : null}
+          {icon ? <span className="shrink-0 text-signal-400">{icon}</span> : null}
           <span className="min-w-0">{title}</span>
         </h1>
         {description ? (
-          <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-zinc-500">
+          <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-signal-400">
             {description}
           </p>
         ) : null}
@@ -130,7 +127,7 @@ export function Field({
     <label className="block">
       <span className="label-base">{label}</span>
       {children}
-      {hint ? <span className="mt-1.5 block text-xs text-zinc-500">{hint}</span> : null}
+      {hint ? <span className="mt-1.5 block text-[11.5px] text-signal-500">{hint}</span> : null}
     </label>
   );
 }
@@ -144,18 +141,18 @@ export function Alert({
 }) {
   const tones = {
     error: {
-      box: "border-rose-400/20 bg-rose-500/[0.08] text-rose-100",
+      box: "border-rose-400/25 bg-rose-500/[0.06] text-rose-100",
       icon: "text-rose-300",
       Icon: AlertCircle,
     },
     success: {
-      box: "border-emerald-400/20 bg-emerald-500/[0.08] text-emerald-100",
+      box: "border-emerald-400/25 bg-emerald-500/[0.05] text-emerald-50",
       icon: "text-emerald-300",
       Icon: CheckCircle2,
     },
     info: {
-      box: "border-cyan-400/20 bg-cyan-500/[0.08] text-cyan-50",
-      icon: "text-cyan-300",
+      box: "border-white/[0.12] bg-white/[0.03] text-signal-200",
+      icon: "text-signal-400",
       Icon: Info,
     },
   } as const;
@@ -163,8 +160,13 @@ export function Alert({
   const { box, icon, Icon } = tones[tone];
 
   return (
-    <div className={cn("flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-[13px] leading-relaxed", box)}>
-      <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", icon)} />
+    <div
+      className={cn(
+        "flex items-start gap-2.5 rounded border px-3 py-2 text-[12.5px] leading-relaxed",
+        box,
+      )}
+    >
+      <Icon className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", icon)} />
       <span>{children}</span>
     </div>
   );

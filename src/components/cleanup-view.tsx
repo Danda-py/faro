@@ -155,20 +155,20 @@ export function CleanupView() {
         }
       />
 
-      <div className="glass flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 text-[12px] text-zinc-500">
+      <div className="glass flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 text-[12px] text-signal-400">
         <span className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 text-violet-300" />
+          <Clock className="h-3.5 w-3.5 text-signal-300" />
           {cronEnabled
             ? "Scansione automatica attiva: ogni giorno ~04:00 UTC su tutti gli account collegati"
             : "Scansione automatica disattivata: imposta CRON_SECRET su Vercel"}
         </span>
-        <span className="text-zinc-600">·</span>
+        <span className="text-signal-500">·</span>
         <span>{suggestions.length} proposte in attesa</span>
-        <span className="text-zinc-600">·</span>
+        <span className="text-signal-500">·</span>
         <span>{formatBytes(totalSize)} potenzialmente liberati</span>
         {lastScan ? (
           <>
-            <span className="text-zinc-600">·</span>
+            <span className="text-signal-500">·</span>
             <span>ultima scansione {new Date(lastScan).toLocaleString("it-IT")}</span>
           </>
         ) : null}
@@ -178,16 +178,16 @@ export function CleanupView() {
       {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-zinc-600">
+        <div className="flex items-center justify-center py-16 text-signal-500">
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
       ) : null}
 
       {!loading && groups.length === 0 ? (
         <div className="glass p-10 text-center">
-          <Eraser className="mx-auto mb-3 h-6 w-6 text-zinc-600" />
-          <p className="text-sm text-zinc-300">Nessuna proposta in attesa.</p>
-          <p className="mx-auto mt-1 max-w-sm text-[12.5px] text-zinc-500">
+          <Eraser className="mx-auto mb-3 h-6 w-6 text-signal-500" />
+          <p className="text-sm text-signal-300">Nessuna proposta in attesa.</p>
+          <p className="mx-auto mt-1 max-w-sm text-[12.5px] text-signal-400">
             Lancia una scansione manuale oppure attendi il cron notturno: le proposte
             compariranno qui.
           </p>
@@ -198,10 +198,10 @@ export function CleanupView() {
         <section key={groupKey} className="glass overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
             <div className="min-w-0">
-              <h2 className="truncate text-[13.5px] font-medium text-zinc-200">
+              <h2 className="truncate text-[13.5px] font-medium text-signal-200">
                 {groupKey}
               </h2>
-              <p className="text-[11px] text-zinc-600">
+              <p className="text-[11px] text-signal-500">
                 branch {items[0].ref} · {items.length} proposte
               </p>
             </div>
@@ -222,10 +222,10 @@ export function CleanupView() {
                 className="flex flex-wrap items-center gap-3 px-4 py-3 transition hover:bg-white/[0.02]"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="break-all font-mono text-[12px] text-zinc-300">
+                  <p className="break-all font-mono text-[12px] text-signal-300">
                     {item.path}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-zinc-600">
+                  <p className="mt-0.5 text-[11px] text-signal-500">
                     {item.reason} · {Math.round(item.confidence * 100)}% ·{" "}
                     {formatBytes(item.size)}
                   </p>
@@ -256,7 +256,7 @@ export function CleanupView() {
         </section>
       ))}
 
-      <p className={cn("text-[11px] text-zinc-600", groups.length === 0 && "text-center")}>
+      <p className={cn("text-[11px] text-signal-500", groups.length === 0 && "text-center")}>
         Le proposte vengono rigenerate ad ogni scansione: se un file torna utile, ignorale.
       </p>
     </div>

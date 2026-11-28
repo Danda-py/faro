@@ -262,11 +262,11 @@ export function AiProviders() {
     <section className="glass p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-sm font-medium text-zinc-200">
-            <Plug className="h-4 w-4 text-violet-300" />
+          <h2 className="flex items-center gap-2 text-sm font-medium text-signal-200">
+            <Plug className="h-4 w-4 text-signal-300" />
             Assistente AI
           </h2>
-          <p className="mt-1 text-[12px] leading-relaxed text-zinc-500">
+          <p className="mt-1 text-[12px] leading-relaxed text-signal-400">
             Scegli il modello che alimenta correzioni, pulizia e chat. Le chiavi sono cifrate
             e restano sul server.
           </p>
@@ -289,14 +289,14 @@ export function AiProviders() {
       ) : null}
 
       {formOpen ? (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="mt-4 rounded-md border border-white/10 bg-white/[0.03] p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[13px] font-medium text-zinc-200">
+            <h3 className="text-[13px] font-medium text-signal-200">
               {editingId ? "Modifica provider" : "Nuovo provider"}
             </h3>
             <button
               onClick={() => setFormOpen(false)}
-              className="grid h-7 w-7 place-items-center rounded-lg text-zinc-500 hover:bg-white/10 hover:text-white"
+              className="grid h-7 w-7 place-items-center rounded text-signal-400 hover:bg-white/10 hover:text-white"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -310,8 +310,8 @@ export function AiProviders() {
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-[11.5px] transition",
                   preset.id === item.id
-                    ? "border-violet-400/40 bg-violet-500/15 text-violet-100"
-                    : "border-white/10 bg-white/[0.03] text-zinc-400 hover:border-white/20 hover:text-zinc-200",
+                    ? "border-signal-400/40 bg-signal-500/15 text-signal-100"
+                    : "border-white/10 bg-white/[0.03] text-signal-400 hover:border-white/20 hover:text-signal-200",
                 )}
               >
                 {item.name}
@@ -352,7 +352,7 @@ export function AiProviders() {
                 autoComplete="off"
                 placeholder={preset.needsKey ? "sk-…" : "non richiesta per Ollama"}
               />
-              <span className="mt-1.5 block text-[11px] text-zinc-600">{preset.hint}</span>
+              <span className="mt-1.5 block text-[11px] text-signal-500">{preset.hint}</span>
             </label>
           </div>
 
@@ -395,7 +395,7 @@ export function AiProviders() {
                 Testa
               </Button>
             ) : null}
-            <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-zinc-600">
+            <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-signal-500">
               <KeyRound className="h-3 w-3" />
               {KIND_LABEL[kind]}
             </span>
@@ -405,7 +405,7 @@ export function AiProviders() {
 
       <div className="mt-4 space-y-2">
         {loading ? (
-          <div className="flex items-center justify-center py-6 text-zinc-600">
+          <div className="flex items-center justify-center py-6 text-signal-500">
             <Loader2 className="h-4 w-4 animate-spin" />
           </div>
         ) : null}
@@ -414,13 +414,13 @@ export function AiProviders() {
           <div
             key={provider.id}
             className={cn(
-              "flex flex-wrap items-center gap-3 rounded-xl border p-3",
+              "flex flex-wrap items-center gap-3 rounded-md border p-3",
               provider.isDefault
-                ? "border-violet-400/30 bg-violet-500/[0.07]"
+                ? "border-signal-400/30 bg-signal-500/[0.07]"
                 : "border-white/5 bg-white/[0.02]",
             )}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-zinc-300">
+            <span className="grid h-9 w-9 place-items-center rounded border border-white/10 bg-white/5 text-signal-300">
               {provider.kind === "openai" && provider.baseUrl.includes("localhost") ? (
                 <Cpu className="h-4 w-4" />
               ) : (
@@ -428,10 +428,10 @@ export function AiProviders() {
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="flex flex-wrap items-center gap-2 text-[13px] text-zinc-200">
+              <p className="flex flex-wrap items-center gap-2 text-[13px] text-signal-200">
                 {provider.label}
                 {provider.isDefault ? (
-                  <span className="chip !border-violet-400/25 !bg-violet-400/10 !text-violet-200">
+                  <span className="chip !border-signal-400/25 !bg-signal-400/10 !text-signal-200">
                     <Star className="h-3 w-3" />
                     attivo
                   </span>
@@ -442,7 +442,7 @@ export function AiProviders() {
                   </span>
                 ) : null}
               </p>
-              <p className="truncate font-mono text-[11px] text-zinc-600">
+              <p className="truncate font-mono text-[11px] text-signal-500">
                 {provider.model} · {provider.baseUrl}
               </p>
             </div>
@@ -488,7 +488,7 @@ export function AiProviders() {
         ))}
 
         {!loading && providers.length === 0 ? (
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-[12.5px] text-zinc-500">
+          <div className="rounded-md border border-white/5 bg-white/[0.02] p-4 text-[12.5px] text-signal-400">
             {envFallback
               ? "Nessun provider salvato: viene usata la GEMINI_API_KEY di ambiente come fallback."
               : "Nessun provider configurato: l'AI resta disattivata finché non ne aggiungi uno."}

@@ -1,25 +1,25 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Github, FolderGit2, Sparkles, ShieldCheck } from "lucide-react";
+import { Github } from "lucide-react";
 import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 const FEATURES = [
   {
-    icon: FolderGit2,
-    title: "Tutti i tuoi repository",
-    text: "Sfoglia, cerca, apri e modifica i file dei tuoi repo — pubblici e privati — da un'unica vista.",
+    label: "repository",
+    title: "Tutti i tuoi repo",
+    text: "Pubblici e privati, letti direttamente da GitHub. Niente copie locali da tenere allineate.",
   },
   {
-    icon: Sparkles,
-    title: "AI al tuo fianco",
-    text: "Correzioni guidate, refactor e pulizia dei file inutilizzati direttamente sul repository.",
+    label: "file",
+    title: "Modifica e commit",
+    text: "Apri un file, correggilo, salvalo: ogni modifica è un commit sul branch che scegli.",
   },
   {
-    icon: ShieldCheck,
-    title: "Account separati",
-    text: "Collega gli account personale e scolastico: cambi contesto con un clic, senza logout.",
+    label: "assistente",
+    title: "AI quando serve",
+    text: "Revisione di un file, pulizia dei doppioni, chat sul repository. Con la chiave che decidi tu.",
   },
 ];
 
@@ -28,73 +28,67 @@ export default async function LandingPage() {
   if (session) redirect("/dashboard");
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-6">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-300 via-indigo-400 to-cyan-300 text-slate-950 shadow-[0_10px_28px_-12px_rgba(129,140,248,0.95),inset_0_1px_0_rgba(255,255,255,0.45)]">
-            <Github className="h-4 w-4" strokeWidth={2.2} />
-          </span>
-          <span className="text-[16px] font-semibold tracking-tight">
-            Faro<span className="text-violet-400">.</span>
-          </span>
+    <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-8">
+      <header className="flex items-center justify-between border-b border-white/[0.07] pb-5">
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[13px] tracking-[0.18em] text-paper">FARO</span>
+          <span className="font-mono text-[10.5px] text-signal-500">workspace github</span>
         </div>
         <Link
           href="/api/auth/github/start"
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-4 text-sm text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.08]"
+          className="inline-flex h-9 items-center gap-2 rounded border border-white/15 px-3.5 text-[12.5px] text-signal-200 transition-colors hover:border-white/30 hover:text-paper"
         >
-          <Github className="h-4 w-4" />
+          <Github className="h-3.5 w-3.5" />
           Accedi
         </Link>
       </header>
 
-      <main className="flex flex-1 flex-col justify-center gap-12 py-16">
-        <section className="animate-fade-up text-center">
-          <span className="chip mx-auto mb-6 flex w-fit shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-            Personale · pronto per la scuola
-          </span>
-          <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
-            Il tuo GitHub, <span className="gradient-text">in un unico posto</span>.
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-pretty text-[15px] leading-relaxed text-zinc-400">
-            Un portale minimale per gestire repository, caricare e correggere file, e far
-            ripulire tutto da un'AI. Con più account collegati e lo stesso spazio di lavoro.
+      <main className="flex flex-1 flex-col justify-center gap-16 py-16">
+        <section className="max-w-2xl">
+          <p className="font-mono text-[10.5px] text-signal-500">
+            portale personale · uso scolastico
           </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <h1 className="mt-4 text-[32px] font-medium leading-[1.15] tracking-[-0.02em] text-paper sm:text-[44px]">
+            Repository, file e revisioni in un unico spazio di lavoro.
+          </h1>
+          <p className="mt-5 max-w-xl text-[14.5px] leading-relaxed text-signal-300">
+            Faro prende i tuoi account GitHub e li mette in fila: un solo posto per leggere i
+            repository, caricare una cartella, correggere un file e far pulire quello che non
+            serve più.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/api/auth/github/start"
-              className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-indigo-300/25 bg-gradient-to-b from-indigo-500 to-indigo-600 px-6 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_18px_44px_-22px_rgba(99,102,241,1)] transition duration-200 hover:from-indigo-400 hover:to-indigo-500"
+              className="inline-flex h-10 items-center gap-2 rounded bg-paper px-4 text-[13.5px] font-medium text-ink-950 transition-colors hover:bg-white"
             >
               <Github className="h-4 w-4" />
               Continua con GitHub
             </Link>
             <Link
               href="/login"
-              className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-6 text-sm text-zinc-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white"
+              className="inline-flex h-10 items-center rounded border border-white/15 px-4 text-[13.5px] text-signal-200 transition-colors hover:border-white/30 hover:text-paper"
             >
               Ho già un account
             </Link>
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-3">
+        <section className="grid gap-8 border-t border-white/[0.07] pt-8 sm:grid-cols-3 sm:gap-10">
           {FEATURES.map((feature) => (
-            <div
-              key={feature.title}
-              className="glass glass-hover animate-fade-up p-5 [animation-delay:120ms]"
-            >
-              <span className="mb-4 grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-indigo-500/20 to-cyan-400/10 text-indigo-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                <feature.icon className="h-5 w-5" />
-              </span>
-              <h2 className="text-sm font-semibold tracking-[-0.01em] text-zinc-100">{feature.title}</h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">{feature.text}</p>
+            <div key={feature.label}>
+              <p className="font-mono text-[10.5px] text-signal-500">{feature.label}</p>
+              <h2 className="mt-2 text-[14px] font-medium text-paper">{feature.title}</h2>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-signal-400">
+                {feature.text}
+              </p>
             </div>
           ))}
         </section>
       </main>
 
-      <footer className="border-t border-white/[0.07] py-6 text-center text-xs text-zinc-600">
-        Costruito con Next.js, Neon e AI · deploy su Vercel
+      <footer className="flex items-center justify-between border-t border-white/[0.07] py-5 font-mono text-[10.5px] text-signal-500">
+        <span>Next.js · Neon · Vercel</span>
+        <span>Faro</span>
       </footer>
     </div>
   );

@@ -102,19 +102,19 @@ export function AccountsView() {
         className="glass glass-hover flex items-center justify-between gap-4 p-4"
       >
         <span className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-indigo-500/20 to-cyan-400/10 text-indigo-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <span className="grid h-10 w-10 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-signal-200">
             <Plus className="h-4 w-4" />
           </span>
           <span>
-            <span className="block text-sm font-medium text-zinc-100">
+            <span className="block text-sm font-medium text-paper">
               Collega un altro account
             </span>
-            <span className="block text-[12px] text-zinc-500">
+            <span className="block text-[12px] text-signal-400">
               GitHub ti chiederà quale account usare: scegli quello da aggiungere.
             </span>
           </span>
         </span>
-        <Link2 className="h-4 w-4 text-zinc-500" />
+        <Link2 className="h-4 w-4 text-signal-400" />
       </a>
 
       {error ? <Alert>{error}</Alert> : null}
@@ -129,7 +129,7 @@ export function AccountsView() {
               key={account.id}
               className={cn(
                 "glass p-4 transition",
-                isCurrent && "border-violet-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_50px_-24px_rgba(139,92,246,0.8)]",
+                isCurrent && "border-signal-400/30",
               )}
             >
               <div className="flex flex-wrap items-start gap-3">
@@ -138,17 +138,17 @@ export function AccountsView() {
                   <img
                     src={account.avatarUrl}
                     alt={account.login}
-                    className="h-11 w-11 rounded-xl ring-1 ring-white/15"
+                    className="h-11 w-11 rounded-md ring-1 ring-white/15"
                   />
                 ) : (
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-xs">
+                  <span className="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-xs">
                     {account.login.slice(0, 2).toUpperCase()}
                   </span>
                 )}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-medium text-zinc-100">
+                    <p className="text-sm font-medium text-paper">
                       {account.label || account.login}
                     </p>
                     {account.isDefault ? (
@@ -158,12 +158,12 @@ export function AccountsView() {
                       </span>
                     ) : null}
                     {isCurrent ? (
-                      <span className="chip !border-violet-400/25 !bg-violet-400/10 !text-violet-200">
+                      <span className="chip !border-signal-400/25 !bg-signal-400/10 !text-signal-200">
                         attivo
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-0.5 text-[12px] text-zinc-500">
+                  <p className="mt-0.5 text-[12px] text-signal-400">
                     @{account.login}
                     {account.email ? ` · ${account.email}` : ""}
                   </p>
@@ -247,8 +247,8 @@ export function AccountsView() {
 
       {accounts.length === 0 ? (
         <div className="glass p-8 text-center">
-          <Github className="mx-auto mb-3 h-6 w-6 text-zinc-600" />
-          <p className="text-sm text-zinc-400">Nessun account ancora collegato.</p>
+          <Github className="mx-auto mb-3 h-6 w-6 text-signal-500" />
+          <p className="text-sm text-signal-400">Nessun account ancora collegato.</p>
         </div>
       ) : null}
     </div>

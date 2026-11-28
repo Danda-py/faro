@@ -307,7 +307,7 @@ export function CreateRepoDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-5"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-3 sm:p-5"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
@@ -318,18 +318,18 @@ export function CreateRepoDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-repo-title"
-        className="glass max-h-[92vh] w-full max-w-2xl overflow-y-auto p-5 shadow-2xl sm:p-6"
+        className="glass max-h-[92vh] w-full max-w-2xl overflow-y-auto p-5  sm:p-6"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-violet-300">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.05] text-signal-300">
               <FileArchive className="h-5 w-5" />
             </span>
             <div>
-              <h2 id="create-repo-title" className="text-lg font-semibold text-zinc-50">
+              <h2 id="create-repo-title" className="text-lg font-semibold text-paper">
                 Nuova repository
               </h2>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-signal-400">
                 Trascina file o cartelle: la struttura viene riprodotta su GitHub con un
                 unico commit iniziale.
               </p>
@@ -340,7 +340,7 @@ export function CreateRepoDialog({
             onClick={onClose}
             disabled={busy}
             aria-label="Chiudi"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/[0.06] hover:text-white disabled:opacity-50"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded text-signal-400 transition hover:bg-white/[0.06] hover:text-white disabled:opacity-50"
           >
             <X className="h-4 w-4" />
           </button>
@@ -350,13 +350,13 @@ export function CreateRepoDialog({
           <div className="mt-4 space-y-2">
             <Alert>{error}</Alert>
             {created ? (
-              <p className="text-[11.5px] text-zinc-500">
+              <p className="text-[11.5px] text-signal-400">
                 La repository{" "}
                 <a
                   href={`https://github.com/${created.fullName}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-violet-300 underline decoration-violet-400/40 hover:text-violet-200"
+                  className="text-signal-300 underline decoration-signal-400/40 hover:text-signal-200"
                 >
                   {created.fullName}
                 </a>{" "}
@@ -367,7 +367,7 @@ export function CreateRepoDialog({
         ) : null}
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <label className="block text-xs font-medium text-zinc-400">
+          <label className="block text-xs font-medium text-signal-400">
             Nome repository
             <Input
               value={name}
@@ -383,7 +383,7 @@ export function CreateRepoDialog({
             />
           </label>
           <div className="flex items-end pb-2.5">
-            <label className="flex items-center gap-2 text-sm text-zinc-300">
+            <label className="flex items-center gap-2 text-sm text-signal-300">
               <input
                 type="checkbox"
                 checked={isPrivate}
@@ -394,8 +394,8 @@ export function CreateRepoDialog({
               Repository privato
             </label>
           </div>
-          <label className="block text-xs font-medium text-zinc-400 sm:col-span-2">
-            Descrizione <span className="font-normal text-zinc-600">(facoltativa)</span>
+          <label className="block text-xs font-medium text-signal-400 sm:col-span-2">
+            Descrizione <span className="font-normal text-signal-500">(facoltativa)</span>
             <Input
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -425,18 +425,18 @@ export function CreateRepoDialog({
           }}
           onDrop={(event) => void onDrop(event)}
           className={cn(
-            "mt-5 rounded-2xl border border-dashed p-5 text-center transition",
+            "mt-5 rounded-md border border-dashed p-5 text-center transition",
             dragging
-              ? "border-violet-300/60 bg-violet-500/[0.1]"
+              ? "border-signal-300/60 bg-signal-500/[0.1]"
               : "border-white/[0.14] bg-white/[0.02]",
           )}
         >
           <span
             className={cn(
-              "mx-auto grid h-12 w-12 place-items-center rounded-2xl border transition",
+              "mx-auto grid h-12 w-12 place-items-center rounded-md border transition",
               dragging
-                ? "border-violet-300/40 bg-violet-500/15 text-violet-200"
-                : "border-white/10 bg-white/[0.04] text-zinc-400",
+                ? "border-signal-300/40 bg-signal-500/15 text-signal-200"
+                : "border-white/10 bg-white/[0.04] text-signal-400",
             )}
           >
             {collecting ? (
@@ -445,10 +445,10 @@ export function CreateRepoDialog({
               <UploadCloud className="h-5 w-5" />
             )}
           </span>
-          <p className="mt-3 text-sm font-medium text-zinc-200">
+          <p className="mt-3 text-sm font-medium text-signal-200">
             {collecting ? "Lettura della selezione…" : "Trascina qui file o cartelle"}
           </p>
-          <p className="mt-1 text-[11.5px] text-zinc-500">
+          <p className="mt-1 text-[11.5px] text-signal-400">
             Le cartelle mantengono la loro struttura; le cartelle vuote ricevono un
             .gitkeep.
           </p>
@@ -479,12 +479,12 @@ export function CreateRepoDialog({
         </div>
 
         {files.length > 0 ? (
-          <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+          <div className="mt-4 rounded-md border border-white/[0.08] bg-white/[0.02] p-3">
             <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
-              <span className="font-medium text-zinc-200">
+              <span className="font-medium text-signal-200">
                 {files.length} file · {formatBytes(totalBytes)}
                 {skipped > 0 ? (
-                  <span className="ml-1.5 font-normal text-zinc-500">
+                  <span className="ml-1.5 font-normal text-signal-400">
                     ({skipped} elementi ignorati)
                   </span>
                 ) : null}
@@ -497,25 +497,25 @@ export function CreateRepoDialog({
                   setProgress(0);
                 }}
                 disabled={busy}
-                className="text-[11px] text-zinc-500 transition hover:text-rose-300 disabled:opacity-50"
+                className="text-[11px] text-signal-400 transition hover:text-rose-300 disabled:opacity-50"
               >
                 Svuota selezione
               </button>
             </div>
             {rootPrefix ? (
-              <p className="mt-1.5 text-[11px] text-cyan-200/80">
+              <p className="mt-1.5 text-[11px] text-signal-200/80">
                 La cartella <span className="font-mono">{rootPrefix}</span> diventa la radice
                 della repository.
               </p>
             ) : null}
-            <ul className="mt-2 space-y-1 font-mono text-[11px] text-zinc-500">
+            <ul className="mt-2 space-y-1 font-mono text-[11px] text-signal-400">
               {preview.map((item) => (
                 <li key={item.path} className="truncate">
                   {finalPath(item.path)}
                 </li>
               ))}
               {files.length > preview.length ? (
-                <li className="text-zinc-600">+ altri {files.length - preview.length} file</li>
+                <li className="text-signal-500">+ altri {files.length - preview.length} file</li>
               ) : null}
             </ul>
             {oversized.length > 0 ? (
@@ -538,18 +538,18 @@ export function CreateRepoDialog({
               <div className="mt-3">
                 <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-cyan-300 transition-all duration-300"
+                    className="h-full rounded-full bg-paper transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                {phase ? <p className="mt-1.5 text-[11px] text-zinc-500">{phase}</p> : null}
+                {phase ? <p className="mt-1.5 text-[11px] text-signal-400">{phase}</p> : null}
               </div>
             ) : null}
           </div>
         ) : null}
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-          <p className="text-[11px] leading-relaxed text-zinc-600">
+          <p className="text-[11px] leading-relaxed text-signal-500">
             Massimo {MAX_FILES} file, 2,5 MB ciascuno, {formatBytes(MAX_TOTAL_BYTES)} in
             totale.
           </p>

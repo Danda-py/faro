@@ -576,23 +576,23 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
   return (
     <div className="space-y-4 py-2">
-      {/* z-30: le card .glass hanno backdrop-blur e creano uno stacking context, senza
+      {/* z-30: le card .glass hanno e creano uno stacking context, senza
           questo il menu VS Code finirebbe dietro l'editor. */}
-      <header className="animate-fade-up relative z-30 flex flex-wrap items-center justify-between gap-3">
+      <header className="relative z-30 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/dashboard"
             aria-label="Torna alla dashboard"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-signal-400 transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-[0.16em] text-zinc-600">
+            <p className="flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-[0.16em] text-signal-500">
               {owner}
               {treeData?.repo.private ? <Lock className="h-3 w-3" /> : null}
             </p>
-            <h1 className="mt-0.5 truncate text-[19px] font-semibold tracking-[-0.02em] text-zinc-50">
+            <h1 className="mt-0.5 truncate text-[19px] font-semibold tracking-[-0.02em] text-paper">
               {treeData?.repo.name ?? repo}
             </h1>
           </div>
@@ -611,7 +611,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
             className="input-base h-9 w-auto !py-0 !text-[12.5px]"
           >
             {(treeData?.branches ?? [branch]).map((name) => (
-              <option key={name} value={name} className="bg-ink-900 text-zinc-200">
+              <option key={name} value={name} className="bg-ink-900 text-signal-200">
                 {name}
               </option>
             ))}
@@ -630,16 +630,16 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           </Button>
           <details className="relative">
             <summary
-              className="inline-flex h-9 cursor-pointer list-none select-none items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.045] px-3.5 text-[12.5px] font-medium text-zinc-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white"
+              className="inline-flex h-9 cursor-pointer list-none select-none items-center gap-1.5 rounded border border-white/10 bg-white/[0.045] px-3.5 text-[12.5px] font-medium text-signal-200 transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white"
               title="Apri il repository nel tuo editor"
             >
               <Code2 className="h-3.5 w-3.5" />
               VS Code
             </summary>
-            <div className="absolute right-0 z-30 mt-1 w-64 rounded-xl border border-white/10 bg-[#111522]/95 p-1 shadow-2xl backdrop-blur-xl">
+            <div className="absolute right-0 z-30 mt-1 w-64 rounded-md border border-white/10 bg-[#1e1d1a] p-1 ">
               <a
                 href={vscodeCloneUri}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"
+                className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-signal-300 hover:bg-white/[0.07]"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Clona e apri in VS Code
@@ -648,7 +648,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 href={webEditorUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"
+                className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-signal-300 hover:bg-white/[0.07]"
               >
                 <Code2 className="h-3.5 w-3.5" />
                 Modifica su github.dev
@@ -659,12 +659,12 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                   event.currentTarget.closest("details")?.removeAttribute("open");
                   void copyCloneCommand();
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"
+                className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-signal-300 hover:bg-white/[0.07]"
               >
                 <Copy className="h-3.5 w-3.5" />
                 Copia comando git clone
               </button>
-              <p className="px-3 pb-1.5 pt-1 text-[10.5px] leading-relaxed text-zinc-600">
+              <p className="px-3 pb-1.5 pt-1 text-[10.5px] leading-relaxed text-signal-500">
                 Il clona-apri richiede VS Code installato sul computer.
               </p>
             </div>
@@ -711,9 +711,9 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
       {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {folderAction ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !folderSaving) setFolderAction(null); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !folderSaving) setFolderAction(null); }}>
           <form onSubmit={manageFolder} className="glass w-full max-w-lg space-y-4 p-5" role="dialog" aria-modal="true" aria-labelledby="folder-action-title">
-            <div><h2 id="folder-action-title" className="text-base font-semibold">{folderAction.action === "delete" ? "Elimina cartella" : "Rinomina o sposta cartella"}</h2><p className="mt-1 break-all font-mono text-xs text-zinc-500">{folderAction.path}</p></div>
+            <div><h2 id="folder-action-title" className="text-base font-semibold">{folderAction.action === "delete" ? "Elimina cartella" : "Rinomina o sposta cartella"}</h2><p className="mt-1 break-all font-mono text-xs text-signal-400">{folderAction.path}</p></div>
             {folderAction.action === "move" ? <label className="label-base block">Nuovo percorso<Input autoFocus className="mt-1.5" value={folderDestination} onChange={(event) => setFolderDestination(event.target.value)} placeholder="src/components" required /></label> : <Alert>Verranno eliminati {treeData?.tree.filter((entry) => entry.path.startsWith(`${folderAction.path}/`)).length ?? 0} file dal branch <code>{branch}</code>. La modifica sarà un commit unico su GitHub.</Alert>}
             {folderAction.action === "move" ? <Alert>La rinomina/spostamento crea un commit sul branch <code>{branch}</code>. I file saranno spostati mantenendo contenuti e permessi.</Alert> : null}
             <div className="flex justify-end gap-2"><Button type="button" variant="ghost" disabled={folderSaving} onClick={() => setFolderAction(null)}>Annulla</Button><Button type="submit" variant={folderAction.action === "delete" ? "danger" : "primary"} loading={folderSaving}>{folderAction.action === "delete" ? "Elimina" : "Sposta cartella"}</Button></div>
@@ -737,7 +737,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
               placeholder={newKind === "folder" ? "src/components" : "src/nuovo-file.ts"}
               autoFocus
             />
-            {newKind === "folder" ? <p className="mt-1 text-[11px] text-zinc-500">GitHub salva le cartelle tramite i file contenuti: verrà aggiunto un file vuoto .gitkeep.</p> : null}
+            {newKind === "folder" ? <p className="mt-1 text-[11px] text-signal-400">GitHub salva le cartelle tramite i file contenuti: verrà aggiunto un file vuoto .gitkeep.</p> : null}
           </div>
           <Button type="submit" loading={creating} disabled={!newPath.trim()}>
             <Check className="h-4 w-4" />
@@ -762,7 +762,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
         <section className="glass flex max-h-[70vh] flex-col overflow-hidden">
           <div className="border-b border-white/5 p-2.5">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-signal-400" />
               <Input
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
@@ -770,7 +770,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 className="!py-2 !pl-9 !text-[12.5px]"
               />
             </div>
-            <p className="mt-2 px-1 text-[10.5px] text-zinc-600">
+            <p className="mt-2 px-1 text-[10.5px] text-signal-500">
               {treeData ? `${filteredTree.length} elementi · ${treeData.tree.length} file` : "—"}
               {treeData?.truncated ? " · lista troncata" : ""}
             </p>
@@ -778,31 +778,31 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
           <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
             {treeLoading && !treeData ? (
-              <div className="flex items-center justify-center py-10 text-zinc-600">
+              <div className="flex items-center justify-center py-10 text-signal-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
             ) : null}
             {filteredTree.map((entry) => entry.folder ? (
-              <div key={`dir:${entry.path}`} className="group flex items-center rounded-lg pr-1 hover:bg-white/[0.06]">
+              <div key={`dir:${entry.path}`} className="group flex items-center rounded pr-1 hover:bg-white/[0.06]">
               <button
                 onClick={() => setExpandedFolders((previous) => {
                   const next = new Set(previous);
                   if (next.has(entry.path)) next.delete(entry.path); else next.add(entry.path);
                   return next;
                 })}
-                className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2 text-left text-[12.5px] text-zinc-300 transition hover:text-white"
+                className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2 text-left text-[12.5px] text-signal-300 transition hover:text-white"
                 style={{ paddingLeft: `${10 + entry.depth * 14}px` }}
                 title={entry.path}
               >
-                {expandedFolders.has(entry.path) || filter.trim() ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-500" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-500" />}
-                <Folder className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                {expandedFolders.has(entry.path) || filter.trim() ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-signal-400" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-signal-400" />}
+                <Folder className="h-3.5 w-3.5 shrink-0 text-signal-300" />
                 <span className="truncate">{entry.name}</span>
               </button>
               <details className="relative shrink-0">
-                <summary className="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-md text-zinc-600 hover:bg-white/10 hover:text-white" aria-label={`Gestisci cartella ${entry.path}`}><MoreHorizontal className="h-3.5 w-3.5" /></summary>
-                <div className="absolute right-0 z-30 mt-1 w-44 rounded-xl border border-white/10 bg-[#111522]/95 p-1 shadow-2xl backdrop-blur-xl">
-                  <button onClick={() => { setFolderAction({ path: entry.path, action: "move" }); setFolderDestination(entry.path.split("/").slice(0, -1).concat(`${entry.name}-nuova`).join("/")); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/[0.07]"><Pencil className="h-3.5 w-3.5" /> Rinomina / sposta</button>
-                  <button onClick={() => setFolderAction({ path: entry.path, action: "delete" })} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/10"><Trash2 className="h-3.5 w-3.5" /> Elimina cartella</button>
+                <summary className="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-md text-signal-500 hover:bg-white/10 hover:text-white" aria-label={`Gestisci cartella ${entry.path}`}><MoreHorizontal className="h-3.5 w-3.5" /></summary>
+                <div className="absolute right-0 z-30 mt-1 w-44 rounded-md border border-white/10 bg-[#1e1d1a] p-1 ">
+                  <button onClick={() => { setFolderAction({ path: entry.path, action: "move" }); setFolderDestination(entry.path.split("/").slice(0, -1).concat(`${entry.name}-nuova`).join("/")); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-signal-300 hover:bg-white/[0.07]"><Pencil className="h-3.5 w-3.5" /> Rinomina / sposta</button>
+                  <button onClick={() => setFolderAction({ path: entry.path, action: "delete" })} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/10"><Trash2 className="h-3.5 w-3.5" /> Elimina cartella</button>
                 </div>
               </details>
               </div>
@@ -811,10 +811,10 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 key={`file:${entry.path}`}
                 onClick={() => void openFile(entry.path)}
                 className={cn(
-                  "group flex w-full items-center gap-2 rounded-lg py-1.5 pr-2 text-left text-[12.5px] transition",
+                  "group flex w-full items-center gap-2 rounded py-1.5 pr-2 text-left text-[12.5px] transition",
                   selected === entry.path
-                    ? "bg-violet-500/15 text-violet-100"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200",
+                    ? "bg-signal-500/15 text-signal-100"
+                    : "text-signal-400 hover:bg-white/5 hover:text-signal-200",
                 )}
                 style={{ paddingLeft: `${27 + entry.depth * 14}px` }}
                 title={entry.path}
@@ -824,7 +824,7 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
               </button>
             ))}
             {!treeLoading && treeData && filteredTree.length === 0 ? (
-              <p className="px-3 py-6 text-center text-xs text-zinc-600">
+              <p className="px-3 py-6 text-center text-xs text-signal-500">
                 Nessun file trovato.
               </p>
             ) : null}
@@ -836,10 +836,10 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
             <>
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 px-3.5 py-2.5">
                 <div className="min-w-0">
-                  <p className="truncate font-mono text-[12.5px] text-zinc-200">
+                  <p className="truncate font-mono text-[12.5px] text-signal-200">
                     {file.path}
                   </p>
-                  <p className="text-[10.5px] text-zinc-600">
+                  <p className="text-[10.5px] text-signal-500">
                     {formatBytes(file.size)} · {fileExtension(file.path) || "file"}
                     {dirty ? " · modificato" : ""}
                   </p>
@@ -865,8 +865,8 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
               {file.binary ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-                  <FileCode2 className="h-6 w-6 text-zinc-600" />
-                  <p className="text-sm text-zinc-400">
+                  <FileCode2 className="h-6 w-6 text-signal-500" />
+                  <p className="text-sm text-signal-400">
                     File binario: puoi solo scaricarlo.
                   </p>
                   <Button variant="ghost" size="sm" onClick={download}>
@@ -881,15 +881,15 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                   onKeyDown={onEditorKeyDown}
                   spellCheck={false}
                   wrap="off"
-                  className="min-h-[420px] flex-1 resize-none bg-transparent p-4 font-mono text-[12.5px] leading-relaxed text-zinc-200 outline-none"
+                  className="min-h-[420px] flex-1 resize-none bg-transparent p-4 font-mono text-[12.5px] leading-relaxed text-signal-200 outline-none"
                 />
               )}
               {!file.binary ? (
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/5 px-3.5 py-1.5 text-[10.5px] text-zinc-600">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/5 px-3.5 py-1.5 text-[10.5px] text-signal-500">
                   <span>{draft.split("\n").length} righe · {draft.length} caratteri</span>
                   <span>
-                    <kbd className="font-mono text-zinc-500">Ctrl/⌘+S</kbd> salva ·{" "}
-                    <kbd className="font-mono text-zinc-500">Tab</kbd> indenta
+                    <kbd className="font-mono text-signal-400">Ctrl/⌘+S</kbd> salva ·{" "}
+                    <kbd className="font-mono text-signal-400">Tab</kbd> indenta
                   </span>
                 </div>
               ) : null}
@@ -897,16 +897,16 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
               {fileLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
+                <Loader2 className="h-5 w-5 animate-spin text-signal-400" />
               ) : (
                 <>
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/5 text-zinc-500">
+                  <span className="grid h-12 w-12 place-items-center rounded-md border border-white/10 bg-white/5 text-signal-400">
                     <FileCode2 className="h-5 w-5" />
                   </span>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-signal-400">
                     Seleziona un file per aprirlo nell&apos;editor.
                   </p>
-                  <p className="text-xs text-zinc-600">
+                  <p className="text-xs text-signal-500">
                     Puoi creare cartelle, aggiungere file o caricarne uno dal computer.
                   </p>
                 </>
@@ -917,11 +917,11 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
         <section className="space-y-3 2xl:max-h-[70vh] 2xl:overflow-y-auto">
           <div className="glass p-4">
-            <h2 className="flex items-center gap-2 text-[13px] font-medium text-zinc-200">
-              <Wand2 className="h-4 w-4 text-violet-300" />
+            <h2 className="flex items-center gap-2 text-[13px] font-medium text-signal-200">
+              <Wand2 className="h-4 w-4 text-signal-300" />
               Correggi con l'AI
             </h2>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+            <p className="mt-1 text-[11.5px] leading-relaxed text-signal-400">
               {file
                 ? "L'AI legge il file aperto e propone una versione corretta. Nulla viene inviato a GitHub senza il tuo Salva."
                 : "Apri un file per correggerlo con l'AI."}
@@ -945,10 +945,10 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
             </Button>
 
             {fix ? (
-              <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-[12.5px] text-zinc-200">{fix.summary}</p>
+              <div className="mt-3 space-y-2 rounded-md border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-[12.5px] text-signal-200">{fix.summary}</p>
                 {fix.notes.length ? (
-                  <ul className="space-y-1 text-[11.5px] text-zinc-500">
+                  <ul className="space-y-1 text-[11.5px] text-signal-400">
                     {fix.notes.map((note) => (
                       <li key={note}>· {note}</li>
                     ))}
@@ -980,11 +980,11 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           </div>
 
           <div className="glass p-4">
-            <h2 className="flex items-center gap-2 text-[13px] font-medium text-zinc-200">
+            <h2 className="flex items-center gap-2 text-[13px] font-medium text-signal-200">
               <Search className="h-4 w-4 text-amber-300" />
               Cerca nel codice
             </h2>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+            <p className="mt-1 text-[11.5px] leading-relaxed text-signal-400">
               Trova dove compare una funzione, una costante o una stringa in tutti i file del
               repository. La ricerca di GitHub guarda il branch predefinito.
             </p>
@@ -1012,9 +1012,9 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
             {codeResults ? (
               <div className="mt-3 space-y-1.5">
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-signal-400">
                   {codeResults.total} risultati per{" "}
-                  <span className="font-mono text-zinc-400">{codeResults.term}</span>
+                  <span className="font-mono text-signal-400">{codeResults.term}</span>
                   {codeResults.truncated ? " · mostrati i primi 30" : ""}
                 </p>
                 {codeResults.results.map((hit) => (
@@ -1022,13 +1022,13 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                     key={`${hit.path}:${hit.fragment.slice(0, 24)}`}
                     type="button"
                     onClick={() => void openFile(hit.path)}
-                    className="block w-full rounded-lg border border-white/5 bg-white/[0.02] p-2 text-left transition hover:border-white/15 hover:bg-white/[0.05]"
+                    className="block w-full rounded border border-white/5 bg-white/[0.02] p-2 text-left transition hover:border-white/15 hover:bg-white/[0.05]"
                   >
-                    <span className="block break-all font-mono text-[11.5px] text-zinc-300">
+                    <span className="block break-all font-mono text-[11.5px] text-signal-300">
                       {hit.path}
                     </span>
                     {hit.fragment ? (
-                      <span className="mt-0.5 block whitespace-pre-wrap break-words font-mono text-[10.5px] leading-relaxed text-zinc-500">
+                      <span className="mt-0.5 block whitespace-pre-wrap break-words font-mono text-[10.5px] leading-relaxed text-signal-400">
                         {hit.fragment}
                       </span>
                     ) : null}
@@ -1044,11 +1044,11 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           </div>
 
           <div className="glass p-4">
-            <h2 className="flex items-center gap-2 text-[13px] font-medium text-zinc-200">
-              <Trash2 className="h-4 w-4 text-cyan-300" />
+            <h2 className="flex items-center gap-2 text-[13px] font-medium text-signal-200">
+              <Trash2 className="h-4 w-4 text-signal-300" />
               Pulizia repository
             </h2>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+            <p className="mt-1 text-[11.5px] leading-relaxed text-signal-400">
               L'AI individua backup, duplicati e file inutilizzati. Sei tu a confermare
               cosa eliminare.
             </p>
@@ -1065,16 +1065,16 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
             {cleanup ? (
               <div className="mt-3 space-y-2">
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-signal-400">
                   {cleanup.scanned} file analizzati · {cleanup.candidates.length} candidati
                 </p>
                 {cleanup.notes ? (
-                  <p className="text-[11px] italic text-zinc-600">{cleanup.notes}</p>
+                  <p className="text-[11px] italic text-signal-500">{cleanup.notes}</p>
                 ) : null}
                 {cleanup.candidates.map((candidate) => (
                   <label
                     key={candidate.path}
-                    className="flex cursor-pointer items-start gap-2 rounded-lg border border-white/5 bg-white/[0.02] p-2"
+                    className="flex cursor-pointer items-start gap-2 rounded border border-white/5 bg-white/[0.02] p-2"
                   >
                     <input
                       type="checkbox"
@@ -1086,13 +1086,13 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                             : previous.filter((path) => path !== candidate.path),
                         )
                       }
-                      className="mt-0.5 h-3.5 w-3.5 accent-violet-500"
+                      className="mt-0.5 h-3.5 w-3.5 accent-signal-500"
                     />
                     <span className="min-w-0">
-                      <span className="block break-all font-mono text-[11.5px] text-zinc-300">
+                      <span className="block break-all font-mono text-[11.5px] text-signal-300">
                         {candidate.path}
                       </span>
-                      <span className="block text-[10.5px] text-zinc-600">
+                      <span className="block text-[10.5px] text-signal-500">
                         {candidate.reason} · {Math.round(candidate.confidence * 100)}%
                       </span>
                     </span>
@@ -1119,11 +1119,11 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
           </div>
 
           <div className="glass p-4">
-            <h2 className="flex items-center gap-2 text-[13px] font-medium text-zinc-200">
-              <Sparkles className="h-4 w-4 text-fuchsia-300" />
+            <h2 className="flex items-center gap-2 text-[13px] font-medium text-signal-200">
+              <Sparkles className="h-4 w-4 text-signal-300" />
               Chat con il contesto
             </h2>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+            <p className="mt-1 text-[11.5px] leading-relaxed text-signal-400">
               Apri l&apos;assistente per domande libere sul repository
               {current ? ` (${current.label || current.login})` : ""}.
             </p>
@@ -1132,9 +1132,9 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
                 Apri assistente
               </Button>
             </Link>
-            <p className="mt-2 text-[10.5px] text-zinc-600">
-              Branch <span className="font-mono text-zinc-500">{branch || "—"}</span> ·
-              account <span className="font-mono text-zinc-500">{current?.login || "—"}</span>
+            <p className="mt-2 text-[10.5px] text-signal-500">
+              Branch <span className="font-mono text-signal-400">{branch || "—"}</span> ·
+              account <span className="font-mono text-signal-400">{current?.login || "—"}</span>
             </p>
           </div>
         </section>

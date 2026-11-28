@@ -129,19 +129,19 @@ export function AiChat() {
       <div className="glass flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
           {!loaded ? (
-            <div className="flex h-full items-center justify-center text-zinc-600">
+            <div className="flex h-full items-center justify-center text-signal-500">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/5 text-violet-300">
+              <span className="grid h-14 w-14 place-items-center rounded-md border border-white/10 bg-white/5 text-signal-300">
                 <Sparkles className="h-6 w-6" />
               </span>
               <div>
-                <p className="text-[15px] font-medium text-zinc-200">
+                <p className="text-[15px] font-medium text-signal-200">
                   Chiedimi quello che vuoi
                 </p>
-                <p className="mt-1 text-[13px] text-zinc-500">
+                <p className="mt-1 text-[13px] text-signal-400">
                   Refactor, spiegazioni, correzioni di file.
                 </p>
               </div>
@@ -150,7 +150,7 @@ export function AiChat() {
                   <button
                     key={suggestion}
                     onClick={() => void send(suggestion)}
-                    className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-left text-[12px] text-zinc-400 transition hover:border-violet-400/30 hover:bg-white/[0.07] hover:text-zinc-200"
+                    className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-left text-[12px] text-signal-400 transition hover:border-signal-400/30 hover:bg-white/[0.07] hover:text-signal-200"
                   >
                     {suggestion}
                   </button>
@@ -164,7 +164,7 @@ export function AiChat() {
           )}
 
           {busy ? (
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <div className="flex items-center gap-2 text-xs text-signal-400">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               L'assistente sta pensando…
             </div>
@@ -205,7 +205,7 @@ export function AiChat() {
         </div>
       </div>
 
-      <p className="mt-3 flex items-center gap-1.5 text-[11px] text-zinc-600">
+      <p className="mt-3 flex items-center gap-1.5 text-[11px] text-signal-500">
         <UserRound className="h-3 w-3" />
         Serve un file specifico? Apri il repository e usa la scheda AI nel workspace.
         <ArrowUpRight className="h-3 w-3" />
@@ -220,20 +220,20 @@ function MessageBubble({ message }: { message: Item }) {
     <div className={cn("flex gap-3", isUser && "flex-row-reverse")}>
       <span
         className={cn(
-          "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[10px] font-medium",
+          "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded text-[10px] font-medium",
           isUser
-            ? "bg-white/10 text-zinc-300"
-            : "bg-gradient-to-br from-violet-500 to-cyan-400 text-ink-950",
+            ? "bg-white/10 text-signal-300"
+            : "bg-paper text-ink-950",
         )}
       >
         {isUser ? "TU" : <Sparkles className="h-3.5 w-3.5" />}
       </span>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-4 py-2.5 text-[13.5px] leading-relaxed",
+          "max-w-[85%] rounded-md px-4 py-2.5 text-[13.5px] leading-relaxed",
           isUser
-            ? "border border-white/10 bg-white/[0.06] text-zinc-200"
-            : "text-zinc-300",
+            ? "border border-white/10 bg-white/[0.06] text-signal-200"
+            : "text-signal-300",
         )}
       >
         <Markdown text={message.content} />
@@ -250,7 +250,7 @@ function Markdown({ text }: { text: string }) {
         index % 2 === 1 ? (
           <pre
             key={index}
-            className="overflow-x-auto rounded-xl border border-white/10 bg-ink-950/70 p-3 font-mono text-[12px] leading-relaxed text-zinc-300"
+            className="overflow-x-auto rounded-md border border-white/10 bg-ink-950/70 p-3 font-mono text-[12px] leading-relaxed text-signal-300"
           >
             <code>{part.replace(/^[a-z0-9+#-]*\n/i, "")}</code>
           </pre>
@@ -269,7 +269,7 @@ export function InlineCheck({ done }: { done: boolean }) {
     <span
       className={cn(
         "grid h-5 w-5 place-items-center rounded-md",
-        done ? "bg-emerald-500/20 text-emerald-300" : "bg-white/5 text-zinc-600",
+        done ? "bg-emerald-500/20 text-emerald-300" : "bg-white/5 text-signal-500",
       )}
     >
       <Check className="h-3 w-3" />

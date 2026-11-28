@@ -32,22 +32,22 @@ export default async function SettingsPage() {
       <GithubProfileSettings />
 
       <section className="glass p-5">
-        <h2 className="text-sm font-semibold tracking-[-0.01em] text-zinc-100">Profilo account</h2>
+        <h2 className="text-sm font-semibold tracking-[-0.01em] text-paper">Profilo account</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="panel p-3.5">
             <p className="label-base !text-[10px]">Utente</p>
-            <p className="truncate text-sm text-zinc-200">@{user?.login ?? "—"}</p>
+            <p className="truncate text-sm text-signal-200">@{user?.login ?? "—"}</p>
           </div>
           <div className="panel p-3.5">
             <p className="label-base !text-[10px]">Account GitHub</p>
-            <p className="text-sm text-zinc-200">{user?._count.accounts ?? 0}</p>
+            <p className="text-sm text-signal-200">{user?._count.accounts ?? 0}</p>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-4 text-xs">
-          <Link href="/accounts" className="text-violet-300 transition hover:text-violet-200">
+          <Link href="/accounts" className="text-signal-300 transition hover:text-signal-200">
             Gestisci gli account collegati →
           </Link>
-          <Link href="/cleanup" className="text-violet-300 transition hover:text-violet-200">
+          <Link href="/cleanup" className="text-signal-300 transition hover:text-signal-200">
             Proposte di pulizia →
           </Link>
         </div>

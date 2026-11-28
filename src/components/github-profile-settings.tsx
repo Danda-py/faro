@@ -144,19 +144,19 @@ export function GithubProfileSettings() {
   return (
     <section className="glass p-5">
       <div className="flex items-start gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-violet-300">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/10 bg-white/5 text-signal-300">
           <Github className="h-4 w-4" />
         </span>
         <div>
-          <h2 className="text-sm font-medium text-zinc-200">Profilo GitHub</h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <h2 className="text-sm font-medium text-signal-200">Profilo GitHub</h2>
+          <p className="mt-1 text-xs text-signal-400">
             Modifica le informazioni pubbliche del profilo selezionato direttamente su GitHub.
           </p>
         </div>
       </div>
 
       {accounts.length === 0 ? (
-        <p className="mt-5 rounded-xl border border-white/5 bg-white/[0.02] p-4 text-sm text-zinc-500">
+        <p className="mt-5 rounded-md border border-white/5 bg-white/[0.02] p-4 text-sm text-signal-400">
           Collega un account GitHub per modificare il profilo.
         </p>
       ) : (
@@ -189,7 +189,7 @@ export function GithubProfileSettings() {
                 onClick={(event) => {
                   if (hasUnsavedChanges && !window.confirm("Hai modifiche non salvate. Vuoi scartarle e ricollegare l'account?")) event.preventDefault();
                 }}
-                className="font-medium text-violet-200 underline decoration-violet-300/40 underline-offset-2 hover:text-violet-100"
+                className="font-medium text-signal-200 underline decoration-signal-300/40 underline-offset-2 hover:text-signal-100"
               >
                 Ricollega @{selectedAccount.login}
               </Link>
@@ -204,7 +204,7 @@ export function GithubProfileSettings() {
                   onClick={(event) => {
                     if (hasUnsavedChanges && !window.confirm("Hai modifiche non salvate. Vuoi scartarle e ricollegare l'account?")) event.preventDefault();
                   }}
-                  className="ml-1 font-medium text-violet-200 underline decoration-violet-300/40 underline-offset-2 hover:text-violet-100"
+                  className="ml-1 font-medium text-signal-200 underline decoration-signal-300/40 underline-offset-2 hover:text-signal-100"
                 >
                   Ricollega @{selectedAccount.login}
                 </Link>
@@ -212,18 +212,18 @@ export function GithubProfileSettings() {
             </Alert>
           ) : null}
           {saved ? <Alert tone="success">Profilo GitHub aggiornato.</Alert> : null}
-          {loading ? <p className="text-xs text-zinc-500">Caricamento profilo…</p> : null}
+          {loading ? <p className="text-xs text-signal-400">Caricamento profilo…</p> : null}
           {selectedAccount ? (
-            <a href={`https://github.com/${encodeURIComponent(selectedAccount.login)}`} target="_blank" rel="noopener noreferrer" className="inline-flex text-xs text-violet-300 transition hover:text-violet-200">
+            <a href={`https://github.com/${encodeURIComponent(selectedAccount.login)}`} target="_blank" rel="noopener noreferrer" className="inline-flex text-xs text-signal-300 transition hover:text-signal-200">
               Apri il profilo @{selectedAccount.login} su GitHub ↗
             </a>
           ) : null}
-          <section className="rounded-xl border border-white/[0.08] bg-black/10 p-4" aria-label="Anteprima del profilo">
-            <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-zinc-500"><Eye className="h-3.5 w-3.5" />Anteprima profilo</div>
+          <section className="rounded-md border border-white/[0.08] bg-black/10 p-4" aria-label="Anteprima del profilo">
+            <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-signal-400"><Eye className="h-3.5 w-3.5" />Anteprima profilo</div>
             <div className="flex items-start gap-3">
-              {profile.avatar_url ? <img src={profile.avatar_url} alt="Avatar GitHub" className="h-12 w-12 rounded-full border border-white/10" /> : <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-zinc-400"><UserRound className="h-5 w-5" /></span>}
-              <div className="min-w-0"><p className="truncate text-sm font-semibold text-zinc-100">{profile.name.trim() || `@${profile.login}`}</p><p className="text-xs text-zinc-500">@{profile.login}</p>{profile.bio.trim() ? <p className="mt-1 whitespace-pre-wrap text-xs text-zinc-400">{profile.bio}</p> : null}
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-zinc-500">{profile.company.trim() ? <span>{profile.company}</span> : null}{profile.location.trim() ? <span>{profile.location}</span> : null}{profile.blog.trim() ? <a href={profile.blog} target="_blank" rel="noopener noreferrer" className="text-cyan-300">{profile.blog}</a> : null}{profile.twitter_username.trim() ? <span>X · @{profile.twitter_username.replace(/^@/, "")}</span> : null}</div>
+              {profile.avatar_url ? <img src={profile.avatar_url} alt="Avatar GitHub" className="h-12 w-12 rounded-full border border-white/10" /> : <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-signal-400"><UserRound className="h-5 w-5" /></span>}
+              <div className="min-w-0"><p className="truncate text-sm font-semibold text-paper">{profile.name.trim() || `@${profile.login}`}</p><p className="text-xs text-signal-400">@{profile.login}</p>{profile.bio.trim() ? <p className="mt-1 whitespace-pre-wrap text-xs text-signal-400">{profile.bio}</p> : null}
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-signal-400">{profile.company.trim() ? <span>{profile.company}</span> : null}{profile.location.trim() ? <span>{profile.location}</span> : null}{profile.blog.trim() ? <a href={profile.blog} target="_blank" rel="noopener noreferrer" className="text-signal-300">{profile.blog}</a> : null}{profile.twitter_username.trim() ? <span>X · @{profile.twitter_username.replace(/^@/, "")}</span> : null}</div>
               </div>
             </div>
           </section>
@@ -247,7 +247,7 @@ export function GithubProfileSettings() {
             <label className="label-base sm:col-span-2">
               Bio
               <textarea className="input-base mt-1.5 min-h-24 resize-y" value={profile.bio} onChange={(event) => update("bio", event.target.value)} maxLength={160} disabled={loading} />
-              <span className="mt-1 block text-right text-[10px] text-zinc-600">{profile.bio.length}/160</span>
+              <span className="mt-1 block text-right text-[10px] text-signal-500">{profile.bio.length}/160</span>
             </label>
             <label className="label-base">
               Username X
@@ -261,9 +261,9 @@ export function GithubProfileSettings() {
             </div>
           </div>
           {hasUnsavedChanges ? <p className="text-xs text-amber-200/80">Hai modifiche non salvate.</p> : null}
-          <p className="text-[11px] text-zinc-600">
+          <p className="text-[11px] text-signal-500">
             Lo username e l&apos;avatar GitHub non sono modificabili da qui; puoi aggiornarli nelle{" "}
-            <a href="https://github.com/settings/profile" target="_blank" rel="noopener noreferrer" className="text-violet-300 underline decoration-violet-300/30 underline-offset-2 hover:text-violet-200">impostazioni del profilo GitHub</a>.
+            <a href="https://github.com/settings/profile" target="_blank" rel="noopener noreferrer" className="text-signal-300 underline decoration-signal-300/30 underline-offset-2 hover:text-signal-200">impostazioni del profilo GitHub</a>.
           </p>
         </form>
       )}
