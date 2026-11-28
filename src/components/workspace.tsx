@@ -546,7 +546,9 @@ export function Workspace({ owner, repo }: { owner: string; repo: string }) {
 
   return (
     <div className="space-y-4 py-2">
-      <header className="animate-fade-up flex flex-wrap items-center justify-between gap-3">
+      {/* z-30: le card .glass hanno backdrop-blur e creano uno stacking context, senza
+          questo il menu VS Code finirebbe dietro l'editor. */}
+      <header className="animate-fade-up relative z-30 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/dashboard"
